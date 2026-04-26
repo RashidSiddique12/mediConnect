@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description MainLayout — wraps protected pages with Sidebar, Header, and Outlet.
- * JIRA: HAA-006 #comment Main layout shell
- */
-
 import { Box, Flex } from '@chakra-ui/react'
 import { Outlet } from 'react-router-dom'
 import Header from './Header'

@@ -1,9 +1,17 @@
-
 import { createSlice } from '@reduxjs/toolkit'
 
+const storedUser = (() => {
+  try {
+    const raw = localStorage.getItem('user')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+})()
+
 const initialState = {
-  user: null,
-  isAuthenticated: false,
+  user: storedUser,
+  isAuthenticated: !!storedUser,
   loading: false,
   error: null,
 }
@@ -48,7 +56,7 @@ const authSlice = createSlice({
   },
 })
 
-export const { 
+const { 
   loginRequest, 
   loginSuccess, 
   loginFailure, 
@@ -58,4 +66,15 @@ export const {
   registerFailure,
 } = authSlice.actions
 
-export default authSlice.reducer
+const authReducer = authSlice.reducer
+
+export {
+  loginRequest,
+  loginSuccess,
+  loginFailure,
+  logout,
+  registerRequest,
+  registerSuccess,
+  registerFailure,
+  authReducer,
+}

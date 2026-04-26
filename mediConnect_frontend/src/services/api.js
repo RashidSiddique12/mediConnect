@@ -1,14 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Centralized Axios service — all API calls must originate here.
- *              Attaches auth token via request interceptor and handles errors globally.
- * OWASP:
- *  - Tokens are read from localStorage (XSS risk — consider httpOnly cookies in prod).
- *  - Response interceptor clears stale auth on 401 to prevent broken access control.
- *  - baseURL is injected from environment variables only (no hardcoded URLs).
- * JIRA: HAA-002 #comment Centralized Axios setup
- */
-
 import axios from 'axios'
 
 const apiClient = axios.create({
@@ -51,85 +40,73 @@ apiClient.interceptors.response.use(
 )
 
 // ─── API Methods ─────────────────────────────────────────────────────────────
-import {
-  mockLoginUser,
-  mockFetchDashboardData,
-  mockFetchHospitals,
-  mockFetchDoctors,
-  mockFetchSpecialties,
-  mockFetchAppointments,
-  mockFetchPrescriptions,
-  mockFetchReviews,
-  mockFetchSchedules,
-  mockFetchUsers,
-  mockAddHospital,
-  mockUpdateHospital,
-  mockAddSpecialty,
-  mockUpdateReview,
-  mockBookAppointment,
-  mockUpdateAppointment,
-  mockAddDoctor,
-  mockDeleteDoctor,
-  mockSubmitReview,
-} from './mockApi'
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
+// Auth
+export const loginUser = (credentials) => apiClient.post('/auth/login', credentials)
+export const registerUser = (data) => apiClient.post('/auth/register', data)
+export const refreshToken = (data) => apiClient.post('/auth/refresh', data)
+export const logoutUser = (data) => apiClient.post('/auth/logout', data)
 
-export const loginUser = (credentials) =>
-  USE_MOCK ? mockLoginUser(credentials) : apiClient.post('/auth/login', credentials)
+// Dashboard
+export const fetchDashboardStats = () => apiClient.get('/dashboard/stats')
+export const fetchDashboardUsers = (params) => apiClient.get('/dashboard/users', { params })
+export const fetchHospitalDashboard = () => apiClient.get('/dashboard/hospital')
+export const fetchPatientDashboard = () => apiClient.get('/dashboard/patient')
 
-export const fetchDashboardData = (role) =>
-  USE_MOCK ? mockFetchDashboardData(role) : apiClient.get('/dashboard')
+// Hospitals
+export const fetchHospitals = (params) => apiClient.get('/hospitals', { params })
+export const fetchHospitalById = (id) => apiClient.get(`/hospitals/${id}`)
+export const addHospital = (data) => apiClient.post('/hospitals', data)
+export const updateHospital = (id, data) => apiClient.put(`/hospitals/${id}`, data)
+export const deleteHospital = (id) => apiClient.delete(`/hospitals/${id}`)
+export const toggleHospitalStatus = (id) => apiClient.patch(`/hospitals/${id}/status`)
 
-export const fetchHospitals = () =>
-  USE_MOCK ? mockFetchHospitals() : apiClient.get('/hospitals')
+// Doctors
+export const fetchDoctors = (params) => apiClient.get('/doctors', { params })
+export const fetchDoctorById = (id) => apiClient.get(`/doctors/${id}`)
+export const addDoctor = (data) => apiClient.post('/doctors', data)
+export const updateDoctor = (id, data) => apiClient.put(`/doctors/${id}`, data)
+export const deleteDoctor = (id) => apiClient.delete(`/doctors/${id}`)
+export const fetchDoctorsByHospital = (hospitalId) => apiClient.get(`/hospitals/${hospitalId}/doctors`)
+export const fetchDoctorsBySpecialty = (specialtyId) => apiClient.get(`/specialties/${specialtyId}/doctors`)
 
-export const fetchDoctors = (filters) =>
-  USE_MOCK ? mockFetchDoctors(filters) : apiClient.get('/doctors', { params: filters })
+// Specialties
+export const fetchSpecialties = (params) => apiClient.get('/specialties', { params })
+export const fetchSpecialtyById = (id) => apiClient.get(`/specialties/${id}`)
+export const addSpecialty = (data) => apiClient.post('/specialties', data)
+export const updateSpecialty = (id, data) => apiClient.put(`/specialties/${id}`, data)
+export const deleteSpecialty = (id) => apiClient.delete(`/specialties/${id}`)
 
-export const fetchSpecialties = () =>
-  USE_MOCK ? mockFetchSpecialties() : apiClient.get('/specialties')
+// Schedules
+export const fetchSchedules = (params) => apiClient.get('/schedules', { params })
+export const fetchSchedulesByDoctor = (doctorId) => apiClient.get(`/doctors/${doctorId}/schedules`)
+export const createSchedule = (data) => apiClient.post('/schedules', data)
+export const updateSchedule = (id, data) => apiClient.put(`/schedules/${id}`, data)
+export const deleteSchedule = (id) => apiClient.delete(`/schedules/${id}`)
 
-export const fetchAppointments = (filters) =>
-  USE_MOCK ? mockFetchAppointments(filters) : apiClient.get('/appointments', { params: filters })
+// Appointments
+export const fetchAppointments = (params) => apiClient.get('/appointments', { params })
+export const fetchAppointmentById = (id) => apiClient.get(`/appointments/${id}`)
+export const bookAppointment = (data) => apiClient.post('/appointments', data)
+export const updateAppointment = (id, data) => apiClient.put(`/appointments/${id}`, data)
+export const cancelAppointment = (id) => apiClient.patch(`/appointments/${id}/cancel`)
+export const fetchPatientAppointments = (patientId, params) => apiClient.get(`/patients/${patientId}/appointments`, { params })
 
-export const fetchPrescriptions = (filters) =>
-  USE_MOCK ? mockFetchPrescriptions(filters) : apiClient.get('/prescriptions', { params: filters })
+// Prescriptions
+export const fetchPrescriptions = (params) => apiClient.get('/prescriptions', { params })
+export const fetchPrescriptionById = (id) => apiClient.get(`/prescriptions/${id}`)
+export const uploadPrescription = (data) =>
+  apiClient.post('/prescriptions/upload', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+export const fetchPatientPrescriptions = (patientId) => apiClient.get(`/patients/${patientId}/prescriptions`)
 
-export const fetchReviews = (filters) =>
-  USE_MOCK ? mockFetchReviews(filters) : apiClient.get('/reviews', { params: filters })
-
-export const fetchSchedules = (filters) =>
-  USE_MOCK ? mockFetchSchedules(filters) : apiClient.get('/schedules', { params: filters })
-
-export const fetchUsers = () =>
-  USE_MOCK ? mockFetchUsers() : apiClient.get('/users')
-
-export const addHospital = (data) =>
-  USE_MOCK ? mockAddHospital(data) : apiClient.post('/hospitals', data)
-
-export const updateHospital = (id, data) =>
-  USE_MOCK ? mockUpdateHospital(id, data) : apiClient.patch(`/hospitals/${id}`, data)
-
-export const addSpecialty = (data) =>
-  USE_MOCK ? mockAddSpecialty(data) : apiClient.post('/specialties', data)
-
-export const updateReview = (id, data) =>
-  USE_MOCK ? mockUpdateReview(id, data) : apiClient.patch(`/reviews/${id}`, data)
-
-export const bookAppointment = (data) =>
-  USE_MOCK ? mockBookAppointment(data) : apiClient.post('/appointments', data)
-
-export const updateAppointment = (id, data) =>
-  USE_MOCK ? mockUpdateAppointment(id, data) : apiClient.patch(`/appointments/${id}`, data)
-
-export const addDoctor = (data) =>
-  USE_MOCK ? mockAddDoctor(data) : apiClient.post('/doctors', data)
-
-export const deleteDoctor = (id) =>
-  USE_MOCK ? mockDeleteDoctor(id) : apiClient.delete(`/doctors/${id}`)
-
-export const submitReview = (data) =>
-  USE_MOCK ? mockSubmitReview(data) : apiClient.post('/reviews', data)
+// Reviews
+export const fetchReviews = (params) => apiClient.get('/reviews', { params })
+export const submitReview = (data) => apiClient.post('/reviews', data)
+export const updateReview = (id, data) => apiClient.put(`/reviews/${id}`, data)
+export const deleteReview = (id) => apiClient.delete(`/reviews/${id}`)
+export const approveReview = (id) => apiClient.patch(`/reviews/${id}/approve`)
+export const rejectReview = (id) => apiClient.patch(`/reviews/${id}/reject`)
 
 export default apiClient

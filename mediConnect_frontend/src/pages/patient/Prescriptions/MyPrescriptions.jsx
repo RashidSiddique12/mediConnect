@@ -1,17 +1,22 @@
-/**
- * @author Healthcare Appointment App
- * @description My Prescriptions — patient views all prescriptions and downloads them.
- * JIRA: HAA-PAT-008 #comment Patient prescriptions UI
- */
-
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Badge, Card, Grid, Button, Avatar,
+  Box, Stack, Heading, Text, Flex, Badge, Card, Grid, Button, Avatar, Spinner, Center,
 } from '@chakra-ui/react'
 import { MdDescription, MdDownload } from 'react-icons/md'
-import { MOCK_PRESCRIPTIONS } from '@/services/mockApi'
+import * as prescriptionSlice from '@/features/prescriptions/prescriptionSlice'
+import * as prescriptionSelectors from '@/features/prescriptions/prescriptionSelectors'
 
 export default function MyPrescriptions() {
-  const prescriptions = MOCK_PRESCRIPTIONS.filter((p) => p.patientId === 'u-003')
+  const dispatch = useDispatch()
+  const prescriptions = useSelector(prescriptionSelectors.selectPrescriptions)
+  const loading = useSelector(prescriptionSelectors.selectPrescriptionsLoading)
+
+  useEffect(() => {
+    dispatch(prescriptionSlice.fetchPrescriptionsRequest())
+  }, [dispatch])
+
+  if (loading) return <Center py={12}><Spinner size="xl" color="teal.500" /></Center>
 
   return (
     <Stack gap={6}>
@@ -29,7 +34,7 @@ export default function MyPrescriptions() {
 
       <Grid templateColumns="repeat(auto-fill, minmax(320px, 1fr))" gap={4}>
         {prescriptions.map((rx) => (
-          <Card.Root key={rx.id} shadow="sm" rounded="xl" overflow="hidden">
+          <Card.Root key={rx._id} shadow="sm" rounded="xl" overflow="hidden">
             {/* Prescription header */}
             <Box bg="teal.700" px={5} py={4} color="white">
               <Flex justify="space-between" align="flex-start">
@@ -38,9 +43,9 @@ export default function MyPrescriptions() {
                     <MdDescription size={18} />
                     <Text fontWeight="700" fontSize="sm">Prescription</Text>
                   </Flex>
-                  <Text opacity={0.7} fontSize="xs">{rx.date}</Text>
+                  <Text opacity={0.7} fontSize="xs">{new Date(rx.createdAt || rx.date).toLocaleDateString()}</Text>
                 </Box>
-                <Badge bg="teal.500" color="white" size="sm">#{rx.id}</Badge>
+                <Badge bg="teal.500" color="white" size="sm">#{rx._id?.slice(-6)}</Badge>
               </Flex>
             </Box>
 
@@ -48,10 +53,10 @@ export default function MyPrescriptions() {
               {/* Doctor info */}
               <Flex align="center" gap={2} mb={4} pb={3} borderBottomWidth="1px">
                 <Avatar.Root size="sm" bg="teal.500">
-                  <Avatar.Fallback name={rx.doctorName} />
+                  <Avatar.Fallback name={rx.doctorId?.name || 'Doctor'} />
                 </Avatar.Root>
                 <Box>
-                  <Text fontWeight="600" fontSize="sm">{rx.doctorName}</Text>
+                  <Text fontWeight="600" fontSize="sm">{rx.doctorId?.name || 'Doctor'}</Text>
                   <Text fontSize="xs" color="gray.500">Prescribing physician</Text>
                 </Box>
               </Flex>

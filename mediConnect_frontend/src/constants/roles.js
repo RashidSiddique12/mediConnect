@@ -1,14 +1,3 @@
-/**
- * @file roles.js
- * @description User role constants for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- * 
- * OWASP Security Considerations:
- * - Role-based access control (RBAC)
- * - Principle of least privilege
- */
-
 export const USER_ROLES = {
   SUPER_ADMIN: 'super_admin',
   HOSPITAL_ADMIN: 'hospital_admin',

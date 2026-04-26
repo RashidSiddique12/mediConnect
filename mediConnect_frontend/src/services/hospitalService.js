@@ -1,13 +1,3 @@
-/**
- * @file hospitalService.js
- * @description Hospital API service for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- * 
- * OWASP Security Considerations:
- * - Authorization checks on all requests
- * - Input sanitization
- */
 
 import api from './api';
 import { HOSPITAL_ENDPOINTS } from '../constants/apiEndpoints';

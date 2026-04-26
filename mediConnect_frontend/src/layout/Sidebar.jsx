@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Sidebar component — role-aware navigation with react-icons.
- * JIRA: HAA-006 #comment Layout sidebar
- */
-
 import { NavLink } from 'react-router-dom'
 import { Box, Stack, Text, Flex, Image } from '@chakra-ui/react'
 import {

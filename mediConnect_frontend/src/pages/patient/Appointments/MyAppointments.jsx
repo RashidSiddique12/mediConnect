@@ -1,25 +1,27 @@
-/**
- * @author Healthcare Appointment App
- * @description My Appointments — patient view of all their appointments with actions.
- * JIRA: HAA-PAT-007 #comment Patient appointments UI
- */
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Badge, Button, Card, Avatar,
+  Box, Stack, Heading, Text, Flex, Badge, Button, Card, Avatar, Spinner, Center,
 } from '@chakra-ui/react'
 import { MdCalendarToday, MdCancel, MdStar, MdArrowForward, MdSearch } from 'react-icons/md'
-import { MOCK_APPOINTMENTS } from '@/services/mockApi'
+import * as appointmentSlice from '@/features/appointments/appointmentSlice'
+import * as appointmentSelectors from '@/features/appointments/appointmentSelectors'
 
 const STATUS_COLOR = { confirmed: 'green', pending: 'orange', completed: 'teal', cancelled: 'red' }
 
 export default function MyAppointments() {
   const navigate = useNavigate()
-  const [appointments, setAppointments] = useState(
-    MOCK_APPOINTMENTS.filter((a) => a.patientId === 'u-003')
-  )
+  const dispatch = useDispatch()
+  const appointments = useSelector(appointmentSelectors.selectAppointments)
+  const loading = useSelector(appointmentSelectors.selectAppointmentsLoading)
   const [filter, setFilter] = useState('')
+
+  useEffect(() => {
+    dispatch(appointmentSlice.fetchAppointmentsRequest())
+  }, [dispatch])
+
+  if (loading) return <Center py={12}><Spinner size="xl" color="teal.500" /></Center>
 
   const filtered = appointments.filter((a) => {
     if (filter === 'upcoming') return a.status === 'confirmed' || a.status === 'pending'
@@ -28,8 +30,8 @@ export default function MyAppointments() {
     return true
   })
 
-  const cancelAppointment = (id) => {
-    setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, status: 'cancelled' } : a))
+  const handleCancel = (id) => {
+    dispatch(appointmentSlice.cancelAppointmentRequest(id))
   }
 
   const counts = {
@@ -65,25 +67,25 @@ export default function MyAppointments() {
 
       <Stack gap={4}>
         {filtered.map((a) => (
-          <Card.Root key={a.id} shadow="sm" rounded="xl" borderLeft="4px solid"
+          <Card.Root key={a._id} shadow="sm" rounded="xl" borderLeft="4px solid"
             borderColor={`${STATUS_COLOR[a.status] || 'gray'}.400`}>
             <Card.Body>
               <Flex justify="space-between" align="flex-start" wrap="wrap" gap={3}>
                 <Flex align="center" gap={4}>
                   <Avatar.Root size="md" bg="teal.500" flexShrink={0}>
-                    <Avatar.Fallback name={a.doctorName} />
+                    <Avatar.Fallback name={a.doctorId?.name || 'Doctor'} />
                   </Avatar.Root>
                   <Box>
-                    <Text fontWeight="700">{a.doctorName}</Text>
-                    <Badge colorPalette="teal" size="sm" variant="outline" mt={0.5}>{a.specialty}</Badge>
+                    <Text fontWeight="700">{a.doctorId?.name || 'Doctor'}</Text>
+                    <Badge colorPalette="teal" size="sm" variant="outline" mt={0.5}>{a.doctorId?.specialtyId?.name || 'General'}</Badge>
                     <Flex align="center" gap={2} mt={1}>
                       <MdCalendarToday size={13} color="#718096" />
-                      <Text fontSize="xs" color="gray.500">{a.date} at {a.time}</Text>
+                      <Text fontSize="xs" color="gray.500">{new Date(a.appointmentDate || a.date).toLocaleDateString()} at {a.timeSlot || a.time}</Text>
                     </Flex>
                   </Box>
                 </Flex>
                 <Flex align="center" gap={3}>
-                  <Text fontWeight="700" color="teal.600">${a.fee}</Text>
+                  <Text fontWeight="700" color="teal.600">${a.fee || 0}</Text>
                   <Badge colorPalette={STATUS_COLOR[a.status] || 'gray'} size="md">{a.status}</Badge>
                 </Flex>
               </Flex>
@@ -91,19 +93,19 @@ export default function MyAppointments() {
               <Flex gap={2} mt={4} justify="flex-end" wrap="wrap">
                 {a.status === 'completed' && (
                   <Button size="sm" colorPalette="orange" variant="outline"
-                    onClick={() => navigate(`/patient/review/${a.id}`)}>
+                    onClick={() => navigate(`/patient/review/${a._id}`)}>
                     <MdStar /> Rate Doctor
                   </Button>
                 )}
                 {(a.status === 'confirmed' || a.status === 'pending') && (
                   <Button size="sm" variant="outline" colorPalette="red"
-                    onClick={() => cancelAppointment(a.id)}>
+                    onClick={() => handleCancel(a._id)}>
                     <MdCancel /> Cancel
                   </Button>
                 )}
                 {a.status === 'pending' && (
                   <Button size="sm" colorPalette="teal"
-                    onClick={() => navigate(`/patient/book/${a.doctorId}`)}>
+                    onClick={() => navigate(`/patient/book/${a.doctorId?._id}`)}>
                     Reschedule <MdArrowForward />
                   </Button>
                 )}

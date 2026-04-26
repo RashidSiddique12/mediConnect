@@ -1,30 +1,16 @@
-/**
- * @author Healthcare Appointment App
- * @description Search Doctors — patient searches and filters doctors.
- * JIRA: HAA-PAT-004 #comment Search doctors UI
- */
-
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Input, Card, Grid, Badge, Button, Avatar, Select, createListCollection,
+  Box, Stack, Heading, Text, Flex, Input, Card, Grid, Badge, Button, Avatar, Select, createListCollection, Spinner, Center,
 } from '@chakra-ui/react'
 import { MdSearch, MdStar, MdPerson, MdArrowForward } from 'react-icons/md'
-import { MOCK_DOCTORS, MOCK_SPECIALTIES, MOCK_HOSPITALS } from '@/services/mockApi'
-
-const specialtyCollection = createListCollection({
-  items: [
-    { label: 'All Specialties', value: '' },
-    ...MOCK_SPECIALTIES.map((s) => ({ label: s.name, value: s.name })),
-  ],
-})
-
-const hospitalCollection = createListCollection({
-  items: [
-    { label: 'All Hospitals', value: '' },
-    ...MOCK_HOSPITALS.map((h) => ({ label: h.name, value: h.id })),
-  ],
-})
+import * as doctorSlice from '@/features/doctors/doctorSlice'
+import * as doctorSelectors from '@/features/doctors/doctorSelectors'
+import * as specialtySlice from '@/features/specialties/specialtySlice'
+import * as specialtySelectors from '@/features/specialties/specialtySelectors'
+import * as hospitalSlice from '@/features/hospitals/hospitalSlice'
+import * as hospitalSelectors from '@/features/hospitals/hospitalSelectors'
 
 function StarRating({ rating }) {
   return (
@@ -38,6 +24,7 @@ function StarRating({ rating }) {
 
 export default function SearchDoctors() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [searchParams] = useSearchParams()
   const initialHospital = searchParams.get('hospital') || ''
 
@@ -45,14 +32,44 @@ export default function SearchDoctors() {
   const [specialty, setSpecialty] = useState('')
   const [hospital, setHospital] = useState(initialHospital)
 
-  const filtered = MOCK_DOCTORS.filter((d) => {
-    const matchSearch = d.name.toLowerCase().includes(search.toLowerCase())
-    const matchSpecialty = specialty ? d.specialty === specialty : true
-    const matchHospital = hospital ? d.hospitalId === hospital : true
+  const doctors = useSelector(doctorSelectors.selectDoctors)
+  const specialties = useSelector(specialtySelectors.selectSpecialties)
+  const hospitals = useSelector(hospitalSelectors.selectHospitals)
+  const loading = useSelector(doctorSelectors.selectDoctorsLoading)
+
+  useEffect(() => {
+    dispatch(doctorSlice.fetchDoctorsRequest())
+    dispatch(specialtySlice.fetchSpecialtiesRequest())
+    dispatch(hospitalSlice.fetchHospitalsRequest())
+  }, [dispatch])
+
+  const specialtyCollection = useMemo(() => createListCollection({
+    items: [
+      { label: 'All Specialties', value: '' },
+      ...specialties.map((s) => ({ label: s.name, value: s._id })),
+    ],
+  }), [specialties])
+
+  const hospitalCollection = useMemo(() => createListCollection({
+    items: [
+      { label: 'All Hospitals', value: '' },
+      ...hospitals.map((h) => ({ label: h.name, value: h._id })),
+    ],
+  }), [hospitals])
+
+  if (loading) return <Center py={12}><Spinner size="xl" color="teal.500" /></Center>
+
+  const filtered = doctors.filter((d) => {
+    const name = d.userId?.name || d.name || ''
+    const matchSearch = name.toLowerCase().includes(search.toLowerCase())
+    const matchSpecialty = specialty ? (d.specialtyIds || []).some((s) => (s._id || s) === specialty) : true
+    const matchHospital = hospital ? (d.hospitalId?._id || d.hospitalId) === hospital : true
     return matchSearch && matchSpecialty && matchHospital
   })
 
-  const getHospitalName = (id) => MOCK_HOSPITALS.find((h) => h.id === id)?.name || id
+  const getHospitalName = (doc) => doc.hospitalId?.name || 'N/A'
+  const getDoctorName = (d) => d.userId?.name || d.name || 'Doctor'
+  const getSpecialtyName = (d) => (d.specialtyIds || []).map((s) => s.name || s).join(', ') || 'General'
 
   return (
     <Stack gap={6}>
@@ -102,43 +119,43 @@ export default function SearchDoctors() {
       {/* Doctor Cards */}
       <Grid templateColumns="repeat(auto-fill, minmax(280px, 1fr))" gap={4}>
         {filtered.map((d) => (
-          <Card.Root key={d.id} shadow="sm" rounded="xl" _hover={{ shadow: 'lg', transform: 'translateY(-3px)' }}
+          <Card.Root key={d._id} shadow="sm" rounded="xl" _hover={{ shadow: 'lg', transform: 'translateY(-3px)' }}
             transition="all 0.25s" overflow="hidden">
             <Box h={2} bg="teal.500" />
             <Card.Body>
               <Flex align="flex-start" gap={3} mb={4}>
                 <Avatar.Root size="lg" bg="teal.500" flexShrink={0}>
-                  <Avatar.Fallback name={d.name} />
+                  <Avatar.Fallback name={getDoctorName(d)} />
                 </Avatar.Root>
                 <Box flex={1}>
-                  <Text fontWeight="700">{d.name}</Text>
-                  <Badge colorPalette="teal" size="sm" mt={0.5}>{d.specialty}</Badge>
-                  <StarRating rating={d.rating} />
+                  <Text fontWeight="700">{getDoctorName(d)}</Text>
+                  <Badge colorPalette="teal" size="sm" mt={0.5}>{getSpecialtyName(d)}</Badge>
+                  <StarRating rating={d.rating || 0} />
                 </Box>
               </Flex>
 
               <Stack gap={2} mb={4}>
                 <Flex justify="space-between">
                   <Text fontSize="xs" color="gray.500">Hospital</Text>
-                  <Text fontSize="xs" fontWeight="600">{getHospitalName(d.hospitalId)}</Text>
+                  <Text fontSize="xs" fontWeight="600">{getHospitalName(d)}</Text>
                 </Flex>
                 <Flex justify="space-between">
                   <Text fontSize="xs" color="gray.500">Experience</Text>
-                  <Text fontSize="xs" fontWeight="600">{d.experience} years</Text>
+                  <Text fontSize="xs" fontWeight="600">{d.experience || 0} years</Text>
                 </Flex>
                 <Flex justify="space-between">
                   <Text fontSize="xs" color="gray.500">Consultation Fee</Text>
-                  <Text fontSize="sm" fontWeight="700" color="teal.600">${d.fee}</Text>
+                  <Text fontSize="sm" fontWeight="700" color="teal.600">${d.consultationFee || d.fee || 0}</Text>
                 </Flex>
               </Stack>
 
               <Grid templateColumns="1fr 1fr" gap={2}>
                 <Button size="sm" variant="outline" colorPalette="teal"
-                  onClick={() => navigate(`/patient/doctors/${d.id}`)}>
+                  onClick={() => navigate(`/patient/doctors/${d._id}`)}>
                   View Profile
                 </Button>
                 <Button size="sm" colorPalette="teal"
-                  onClick={() => navigate(`/patient/book/${d.id}`)}>
+                  onClick={() => navigate(`/patient/book/${d._id}`)}>
                   Book Now <MdArrowForward />
                 </Button>
               </Grid>

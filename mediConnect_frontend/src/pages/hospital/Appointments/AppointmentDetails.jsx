@@ -1,106 +1,136 @@
-/**
- * @author Healthcare Appointment App
- * @description Appointment Details — hospital admin views patient details and uploads prescription.
- * JIRA: HAA-HOSP-009 #comment Appointment detail UI
- */
-
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Button, Card, Badge, Grid, Separator,
+  Box, Stack, Heading, Text, Flex, Button, Card, Badge, Grid,
 } from '@chakra-ui/react'
-import { MdArrowBack, MdPerson, MdLocalHospital, MdUpload } from 'react-icons/md'
-import { MOCK_APPOINTMENTS, MOCK_PRESCRIPTIONS } from '@/services/mockApi'
+import { MdPerson, MdLocalHospital, MdUpload, MdDescription } from 'react-icons/md'
+import PageHeader from '@/components/common/PageHeader'
+import EmptyState from '@/components/common/EmptyState'
+import Loader from '@/components/common/Loader'
+import * as appointmentSlice from '@/features/appointments/appointmentSlice'
+import { selectCurrentAppointment, selectAppointmentsLoading } from '@/features/appointments/appointmentSelectors'
+import * as prescriptionSlice from '@/features/prescriptions/prescriptionSlice'
+import { selectCurrentPrescription } from '@/features/prescriptions/prescriptionSelectors'
 
-const STATUS_COLOR = { confirmed: 'green', pending: 'orange', completed: 'teal', cancelled: 'red' }
+const STATUS_COLOR = { booked: 'green', completed: 'teal', cancelled: 'red' }
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+  })
+}
 
 export default function AppointmentDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const appointment = MOCK_APPOINTMENTS.find((a) => a.id === id)
-  const prescription = MOCK_PRESCRIPTIONS.find((p) => p.appointmentId === id)
-  const [status, setStatus] = useState(appointment?.status)
+  const dispatch = useDispatch()
+  const appointment = useSelector(selectCurrentAppointment)
+  const loading = useSelector(selectAppointmentsLoading)
+  const prescription = useSelector(selectCurrentPrescription)
 
-  if (!appointment) return (
-    <Box textAlign="center" py={12} color="gray.400">
-      <Text>Appointment not found.</Text>
-    </Box>
-  )
+  useEffect(() => {
+    dispatch(appointmentSlice.fetchAppointmentByIdRequest(id))
+    dispatch(prescriptionSlice.fetchPrescriptionByAppointmentRequest(id))
+  }, [dispatch, id])
+
+  const handleUpdateStatus = (status) =>
+    dispatch(appointmentSlice.updateAppointmentRequest({ id, status }))
+
+  const handleCancel = () =>
+    dispatch(appointmentSlice.cancelAppointmentRequest(id))
+
+  if (loading) return <Loader />
+
+  if (!appointment) {
+    return (
+      <EmptyState
+        title="Appointment not found"
+        description="The appointment you're looking for doesn't exist or has been removed"
+        actionLabel="Back to Appointments"
+        onAction={() => navigate('/hospital/appointments')}
+      />
+    )
+  }
+
+  const { status } = appointment
 
   return (
     <Stack gap={6} maxW="800px">
-      <Flex align="center" gap={3}>
-        <Button variant="ghost" colorPalette="teal" onClick={() => navigate('/hospital/appointments')}>
-          <MdArrowBack /> Back
-        </Button>
-        <Box>
-          <Heading size="lg">Appointment Details</Heading>
-          <Text color="gray.500" fontSize="sm">#{appointment.id}</Text>
-        </Box>
-      </Flex>
+      <PageHeader
+        title="Appointment Details"
+        subtitle={`#${appointment._id}`}
+        backTo="/hospital/appointments"
+      />
 
-      {/* Status Banner */}
-      <Card.Root shadow="sm" rounded="xl" borderLeft="4px solid" borderColor={`${STATUS_COLOR[status]}.400`}>
+      {/* ─── Status Banner ─── */}
+      <Card.Root
+        shadow="sm"
+        rounded="xl"
+        borderLeft="4px solid"
+        borderColor={`${STATUS_COLOR[status] || 'gray'}.400`}
+      >
         <Card.Body>
           <Flex justify="space-between" align="center" wrap="wrap" gap={3}>
             <Flex align="center" gap={3}>
               <Badge colorPalette={STATUS_COLOR[status] || 'gray'} size="lg" px={3} py={1}>
                 {status?.toUpperCase()}
               </Badge>
-              <Text fontSize="sm" color="gray.500">{appointment.date} at {appointment.time}</Text>
+              <Text fontSize="sm" color="gray.500">
+                {formatDate(appointment.appointmentDate)} at {appointment.timeSlot}
+              </Text>
             </Flex>
-            <Flex gap={2}>
-              {status === 'pending' && (
-                <Button size="sm" colorPalette="green" onClick={() => setStatus('confirmed')}>Confirm</Button>
-              )}
-              {status === 'confirmed' && (
-                <Button size="sm" colorPalette="teal" onClick={() => setStatus('completed')}>Mark Complete</Button>
-              )}
-              {(status === 'pending' || status === 'confirmed') && (
-                <Button size="sm" variant="outline" colorPalette="red" onClick={() => setStatus('cancelled')}>Cancel</Button>
-              )}
-            </Flex>
+            {status === 'booked' && (
+              <Flex gap={2}>
+                <Button size="sm" colorPalette="teal" onClick={() => handleUpdateStatus('completed')}>
+                  Mark Complete
+                </Button>
+                <Button size="sm" variant="outline" colorPalette="red" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </Flex>
+            )}
           </Flex>
         </Card.Body>
       </Card.Root>
 
+      {/* ─── Patient & Doctor Info ─── */}
       <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
-        {/* Patient */}
-        <Card.Root shadow="sm" rounded="xl">
-          <Card.Body>
-            <Flex align="center" gap={2} mb={4}>
-              <Box bg="blue.100" p={2} rounded="lg" color="blue.600"><MdPerson size={20} /></Box>
-              <Heading size="sm">Patient</Heading>
-            </Flex>
-            <Stack gap={3}>
-              <InfoRow label="Name" value={appointment.patientName} />
-              <InfoRow label="Appointment ID" value={appointment.id} />
-              <InfoRow label="Fee" value={`$${appointment.fee}`} />
-            </Stack>
-          </Card.Body>
-        </Card.Root>
-
-        {/* Doctor */}
-        <Card.Root shadow="sm" rounded="xl">
-          <Card.Body>
-            <Flex align="center" gap={2} mb={4}>
-              <Box bg="teal.100" p={2} rounded="lg" color="teal.600"><MdLocalHospital size={20} /></Box>
-              <Heading size="sm">Doctor & Specialty</Heading>
-            </Flex>
-            <Stack gap={3}>
-              <InfoRow label="Doctor" value={appointment.doctorName} />
-              <InfoRow label="Specialty" value={appointment.specialty} />
-              <InfoRow label="Hospital" value="City General Hospital" />
-            </Stack>
-          </Card.Body>
-        </Card.Root>
+        <InfoCard
+          icon={MdPerson}
+          iconBg="blue.100"
+          iconColor="blue.600"
+          title="Patient"
+          rows={[
+            { label: 'Name', value: appointment.patientId?.name },
+            { label: 'Email', value: appointment.patientId?.email },
+            { label: 'Phone', value: appointment.patientId?.phone },
+          ]}
+        />
+        <InfoCard
+          icon={MdLocalHospital}
+          iconBg="teal.100"
+          iconColor="teal.600"
+          title="Doctor & Hospital"
+          rows={[
+            { label: 'Doctor', value: appointment.doctorId?.name },
+            { label: 'Hospital', value: appointment.hospitalId?.name },
+            { label: 'Reason', value: appointment.reason },
+          ]}
+        />
       </Grid>
 
-      {/* Prescription section */}
+      {/* ─── Prescription ─── */}
       <Card.Root shadow="sm" rounded="xl">
         <Card.Body>
           <Flex justify="space-between" align="center" mb={4}>
-            <Heading size="sm">Prescription</Heading>
+            <Flex align="center" gap={2}>
+              <Box bg="purple.100" p={2} rounded="lg" color="purple.600">
+                <MdDescription size={20} />
+              </Box>
+              <Heading size="sm">Prescription</Heading>
+            </Flex>
             {status === 'completed' && (
               <Button size="sm" colorPalette="teal" onClick={() => navigate(`/hospital/prescriptions/upload/${id}`)}>
                 <MdUpload /> Upload Prescription
@@ -109,23 +139,39 @@ export default function AppointmentDetails() {
           </Flex>
 
           {prescription ? (
-            <Stack gap={3}>
-              <Box bg="teal.50" p={4} rounded="lg">
-                <Text fontWeight="700" color="teal.700" mb={1}>{prescription.diagnosis}</Text>
-                <Text fontSize="sm" color="gray.600">{prescription.notes}</Text>
-              </Box>
-              {prescription.medicines.map((m, i) => (
-                <Flex key={i} justify="space-between" align="center" bg="gray.50" p={3} rounded="md">
-                  <Text fontWeight="600" fontSize="sm">{m.name}</Text>
-                  <Text fontSize="xs" color="gray.500">{m.dosage} • {m.duration}</Text>
-                </Flex>
-              ))}
-            </Stack>
+            <Box bg="teal.50" p={4} rounded="lg">
+              <Flex align="center" gap={2} mb={1}>
+                <Box
+                  w={5} h={5} bg="teal.500" color="white" rounded="full"
+                  display="flex" alignItems="center" justifyContent="center"
+                  fontSize="xs" fontWeight="700" flexShrink={0}
+                >
+                  ✓
+                </Box>
+                <Text fontWeight="700" color="teal.700">Prescription uploaded</Text>
+              </Flex>
+              {prescription.notes && (
+                <Text fontSize="sm" color="gray.600" mt={2}>{prescription.notes}</Text>
+              )}
+              {prescription.fileUrl && (
+                <Text fontSize="sm" color="teal.600" mt={1}>File: {prescription.fileUrl}</Text>
+              )}
+            </Box>
           ) : (
-            <Box textAlign="center" py={6} color="gray.400" border="2px dashed" borderColor="gray.200" rounded="lg">
+            <Box
+              textAlign="center"
+              py={6}
+              color="gray.400"
+              border="2px dashed"
+              borderColor="gray.200"
+              rounded="lg"
+            >
+              <MdDescription size={28} style={{ margin: '0 auto 8px' }} />
               <Text fontSize="sm">No prescription uploaded yet</Text>
               {status === 'completed' && (
-                <Text fontSize="xs" mt={1}>Click "Upload Prescription" to add one</Text>
+                <Text fontSize="xs" mt={1} color="gray.500">
+                  Click &ldquo;Upload Prescription&rdquo; to add one
+                </Text>
               )}
             </Box>
           )}
@@ -135,11 +181,25 @@ export default function AppointmentDetails() {
   )
 }
 
-function InfoRow({ label, value }) {
+function InfoCard({ icon: Icon, iconBg, iconColor, title, rows }) {
   return (
-    <Flex justify="space-between" align="center">
-      <Text fontSize="sm" color="gray.500">{label}</Text>
-      <Text fontSize="sm" fontWeight="600">{value}</Text>
-    </Flex>
+    <Card.Root shadow="sm" rounded="xl">
+      <Card.Body>
+        <Flex align="center" gap={2} mb={4}>
+          <Box bg={iconBg} p={2} rounded="lg" color={iconColor}>
+            <Icon size={20} />
+          </Box>
+          <Heading size="sm">{title}</Heading>
+        </Flex>
+        <Stack gap={3}>
+          {rows.map(({ label, value }) => (
+            <Flex key={label} justify="space-between" align="center">
+              <Text fontSize="sm" color="gray.500">{label}</Text>
+              <Text fontSize="sm" fontWeight="600">{value || 'N/A'}</Text>
+            </Flex>
+          ))}
+        </Stack>
+      </Card.Body>
+    </Card.Root>
   )
 }

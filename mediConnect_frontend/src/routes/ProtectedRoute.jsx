@@ -1,11 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description ProtectedRoute — redirects unauthenticated users to /login.
- *              Also enforces role-based access control (RBAC).
- * OWASP: Broken Access Control — always enforce server-side auth; this is UI-only gating.
- * JIRA: HAA-007 #comment Protected route guard
- */
-
 import { useSelector } from 'react-redux'
 import { Navigate, Outlet } from 'react-router-dom'
 

@@ -1,15 +1,9 @@
-/**
- * @author Healthcare Appointment App
- * @description Header component — user info, role badge, logout.
- * JIRA: HAA-006 #comment Layout header
- */
-
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { Box, Flex, Heading, Button, Text, Badge, Avatar } from '@chakra-ui/react'
 import { MdLogout, MdNotifications } from 'react-icons/md'
 import { FaHospitalUser } from 'react-icons/fa'
-import { logout } from '@/pages/auth/authSlice'
+import * as authSlice from '@/features/auth/authSlice'
 
 const ROLE_COLORS = {
   super_admin:   'red',
@@ -30,8 +24,10 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem('authToken')
+    localStorage.removeItem('refreshToken')
     localStorage.removeItem('userRole')
-    dispatch(logout())
+    localStorage.removeItem('user')
+    dispatch(authSlice.logout())
     navigate('/login', { replace: true })
   }
 

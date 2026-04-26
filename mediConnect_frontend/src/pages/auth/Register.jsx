@@ -1,11 +1,4 @@
 
-/**
- * @author Healthcare Appointment App
- * @description Register page — new patient registration form.
- * OWASP: Input validated client-side; server must re-validate. No XSS exposure.
- * JIRA: HAA-004 #comment Register UI
- */
-
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router-dom'
@@ -25,7 +18,7 @@ import {
 } from '@chakra-ui/react'
 import { MdPerson, MdEmail, MdLock, MdPhone } from 'react-icons/md'
 import { FaHospitalUser } from 'react-icons/fa'
-import { registerRequest } from './authSlice'
+import * as authSlice from '@/features/auth/authSlice'
 
 const genders = createListCollection({
   items: [
@@ -62,7 +55,7 @@ export default function Register() {
       return
     }
     const { confirmPassword, ...payload } = form
-    dispatch(registerRequest({ ...payload, role: 'patient' }))
+    dispatch(authSlice.registerRequest({ ...payload, role: 'patient' }))
   }
 
   const displayError = localError || error

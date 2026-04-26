@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description ErrorBoundary — React class-based error boundary to catch render errors.
- *              Renders a Chakra UI fallback UI instead of crashing the whole app.
- * JIRA: HAA-008 #comment Error boundary component
- */
 
 import { Component } from 'react'
 import { Box, Heading, Text, Button } from '@chakra-ui/react'

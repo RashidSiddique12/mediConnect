@@ -1,13 +1,3 @@
-/**
- * @file HospitalRoutes.jsx
- * @description Route configuration for Hospital Admin module
- * @author Healthcare App Team
- * @created 2026-04-15
- * 
- * OWASP Security Considerations:
- * - Role-based route protection
- * - Authorization validation
- */
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';

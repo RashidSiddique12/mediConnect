@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Loader — full-screen Chakra Spinner used as Suspense fallback.
- * JIRA: HAA-008 #comment Reusable loader component
- */
-
 import { Center, Spinner } from '@chakra-ui/react'
 
 export default function Loader() {

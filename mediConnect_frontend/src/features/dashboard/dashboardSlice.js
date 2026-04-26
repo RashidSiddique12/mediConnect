@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Dashboard Redux slice — manages dashboard data, loading, and error.
- * JIRA: HAA-005 #comment Dashboard slice
- */
-
 import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
@@ -32,10 +26,17 @@ const dashboardSlice = createSlice({
   },
 })
 
-export const {
+const {
   fetchDashboardRequest,
   fetchDashboardSuccess,
   fetchDashboardFailure,
 } = dashboardSlice.actions
 
-export default dashboardSlice.reducer
+const dashboardReducer = dashboardSlice.reducer
+
+export {
+  fetchDashboardRequest,
+  fetchDashboardSuccess,
+  fetchDashboardFailure,
+  dashboardReducer,
+}

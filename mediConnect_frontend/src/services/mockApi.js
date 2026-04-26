@@ -1,13 +1,3 @@
-/**
- * @file mockApi.js
- * @description Mock API layer — returns dummy data for all user types.
- *              Drop-in replacement for real API calls while backend is not ready.
- *              TOGGLE: set VITE_USE_MOCK=true in .env.local to enable.
- * @author Healthcare Appointment App
- * OWASP: No real credentials or tokens are validated here — mock only.
- * JIRA: HAA-MOCK #comment Frontend mock data layer
- */
-
 // ─── Simulate network latency ─────────────────────────────────────────────────
 const delay = (ms = 400) => new Promise((res) => setTimeout(res, ms))
 

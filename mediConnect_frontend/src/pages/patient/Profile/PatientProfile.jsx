@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Patient Profile — view and edit personal info.
- * JIRA: HAA-PAT-002 #comment Patient profile UI
- */
-
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import {

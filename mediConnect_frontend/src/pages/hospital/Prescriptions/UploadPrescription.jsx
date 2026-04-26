@@ -1,59 +1,86 @@
-/**
- * @author Healthcare Appointment App
- * @description Upload Prescription — hospital admin uploads prescription for completed appointment.
- * JIRA: HAA-HOSP-010 #comment Upload prescription UI
- */
-
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Button, Card, Grid, Field, Input, Textarea,
+  Box, Stack, Text, Flex, Button, Card, Field, Input, Textarea,
 } from '@chakra-ui/react'
-import { MdArrowBack, MdAdd, MdDelete, MdUpload } from 'react-icons/md'
-import { MOCK_APPOINTMENTS } from '@/services/mockApi'
+import { MdUpload, MdCloudUpload, MdInsertDriveFile } from 'react-icons/md'
+import PageHeader from '@/components/common/PageHeader'
+import EmptyState from '@/components/common/EmptyState'
+import * as appointmentSlice from '@/features/appointments/appointmentSlice'
+import { selectCurrentAppointment } from '@/features/appointments/appointmentSelectors'
+import * as prescriptionSlice from '@/features/prescriptions/prescriptionSlice'
+import { selectPrescriptionUploading, selectPrescriptionUploaded } from '@/features/prescriptions/prescriptionSelectors'
+
+const ACCEPTED_FORMATS = '.pdf,.jpg,.jpeg,.png'
 
 export default function UploadPrescription() {
-  const { id } = useParams()
+  const { appointmentId } = useParams()
   const navigate = useNavigate()
-  const appointment = MOCK_APPOINTMENTS.find((a) => a.id === id)
+  const dispatch = useDispatch()
+  const appointment = useSelector(selectCurrentAppointment)
+  const uploading = useSelector(selectPrescriptionUploading)
+  const uploaded = useSelector(selectPrescriptionUploaded)
+  const fileRef = useRef(null)
+  const [fileName, setFileName] = useState('')
 
-  const [form, setForm] = useState({ diagnosis: '', notes: '' })
-  const [medicines, setMedicines] = useState([{ name: '', dosage: '', duration: '' }])
-  const [saved, setSaved] = useState(false)
+  useEffect(() => {
+    dispatch(appointmentSlice.fetchAppointmentByIdRequest(appointmentId))
+    return () => dispatch(prescriptionSlice.resetUpload())
+  }, [dispatch, appointmentId])
 
-  const addMedicine = () => setMedicines((prev) => [...prev, { name: '', dosage: '', duration: '' }])
-  const removeMedicine = (idx) => setMedicines((prev) => prev.filter((_, i) => i !== idx))
-  const updateMedicine = (idx, field, value) => {
-    setMedicines((prev) => prev.map((m, i) => i === idx ? { ...m, [field]: value } : m))
+  useEffect(() => {
+    if (uploaded) {
+      const timer = setTimeout(() => navigate(`/hospital/appointments/${appointmentId}`), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [uploaded, navigate, appointmentId])
+
+  const handleFileChange = (e) => {
+    setFileName(e.target.files?.[0]?.name || '')
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    setSaved(true)
-    setTimeout(() => navigate(`/hospital/appointments/${id}`), 1500)
+    const formData = new FormData(e.target)
+    formData.set('appointmentId', appointmentId)
+    dispatch(prescriptionSlice.uploadPrescriptionRequest(formData))
   }
 
-  if (!appointment) return (
-    <Box textAlign="center" py={12} color="gray.400"><Text>Appointment not found.</Text></Box>
-  )
+  if (!appointment) {
+    return (
+      <EmptyState
+        title="Appointment not found"
+        actionLabel="Back to Appointments"
+        onAction={() => navigate('/hospital/appointments')}
+      />
+    )
+  }
+
+  const backPath = `/hospital/appointments/${appointmentId}`
 
   return (
     <Stack gap={6} maxW="700px">
-      <Flex align="center" gap={3}>
-        <Button variant="ghost" colorPalette="teal" onClick={() => navigate(`/hospital/appointments/${id}`)}>
-          <MdArrowBack /> Back
-        </Button>
-        <Box>
-          <Heading size="lg">Upload Prescription</Heading>
-          <Text color="gray.500" fontSize="sm">
-            For: {appointment.patientName} | {appointment.doctorName}
-          </Text>
-        </Box>
-      </Flex>
+      <PageHeader
+        title="Upload Prescription"
+        subtitle={`For: ${appointment.patientId?.name || 'Patient'} | ${appointment.doctorId?.name || 'Doctor'}`}
+        backTo={backPath}
+      />
 
-      {saved && (
+      {uploaded && (
         <Box bg="teal.50" border="1px solid" borderColor="teal.200" p={4} rounded="lg">
-          <Text color="teal.700" fontWeight="600">✓ Prescription uploaded successfully!</Text>
+          <Flex align="center" gap={2}>
+            <Box
+              w={5} h={5} bg="teal.500" color="white" rounded="full"
+              display="flex" alignItems="center" justifyContent="center"
+              fontSize="xs" fontWeight="700" flexShrink={0}
+            >
+              ✓
+            </Box>
+            <Text fontSize="sm" fontWeight="600" color="teal.700">
+              Prescription uploaded successfully! Redirecting…
+            </Text>
+          </Flex>
         </Box>
       )}
 
@@ -61,76 +88,58 @@ export default function UploadPrescription() {
         <Card.Body as="form" onSubmit={handleSubmit}>
           <Stack gap={5}>
             <Field.Root required>
-              <Field.Label>Diagnosis</Field.Label>
-              <Input
-                placeholder="e.g. Hypertension Stage 1"
-                value={form.diagnosis}
-                onChange={(e) => setForm((p) => ({ ...p, diagnosis: e.target.value }))}
-              />
+              <Field.Label>Prescription File</Field.Label>
+              <Box
+                border="2px dashed"
+                borderColor={fileName ? 'teal.300' : 'gray.200'}
+                rounded="lg"
+                p={6}
+                textAlign="center"
+                cursor="pointer"
+                _hover={{ borderColor: 'teal.400', bg: 'teal.50' }}
+                transition="all 0.15s"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Input
+                  ref={fileRef}
+                  name="file"
+                  type="file"
+                  accept={ACCEPTED_FORMATS}
+                  display="none"
+                  onChange={handleFileChange}
+                />
+                {fileName ? (
+                  <Flex direction="column" align="center" gap={2}>
+                    <Box color="teal.500"><MdInsertDriveFile size={32} /></Box>
+                    <Text fontSize="sm" fontWeight="600" color="teal.700">{fileName}</Text>
+                    <Text fontSize="xs" color="gray.500">Click to change file</Text>
+                  </Flex>
+                ) : (
+                  <Flex direction="column" align="center" gap={2}>
+                    <Box color="gray.300"><MdCloudUpload size={40} /></Box>
+                    <Text fontSize="sm" fontWeight="600" color="gray.600">
+                      Click to select a file
+                    </Text>
+                    <Text fontSize="xs" color="gray.400">
+                      Accepted formats: PDF, JPG, PNG
+                    </Text>
+                  </Flex>
+                )}
+              </Box>
             </Field.Root>
 
-            <Box>
-              <Flex justify="space-between" align="center" mb={3}>
-                <Text fontWeight="600">Medicines</Text>
-                <Button size="xs" colorPalette="teal" onClick={addMedicine}>
-                  <MdAdd /> Add Medicine
-                </Button>
-              </Flex>
-              <Stack gap={3}>
-                {medicines.map((med, idx) => (
-                  <Box key={idx} bg="gray.50" p={3} rounded="lg">
-                    <Grid templateColumns={{ base: '1fr', sm: '2fr 2fr 2fr auto' }} gap={3} alignItems="flex-end">
-                      <Field.Root>
-                        <Field.Label fontSize="xs">Medicine Name</Field.Label>
-                        <Input
-                          size="sm"
-                          placeholder="Amlodipine 5mg"
-                          value={med.name}
-                          onChange={(e) => updateMedicine(idx, 'name', e.target.value)}
-                        />
-                      </Field.Root>
-                      <Field.Root>
-                        <Field.Label fontSize="xs">Dosage</Field.Label>
-                        <Input
-                          size="sm"
-                          placeholder="1 tablet daily"
-                          value={med.dosage}
-                          onChange={(e) => updateMedicine(idx, 'dosage', e.target.value)}
-                        />
-                      </Field.Root>
-                      <Field.Root>
-                        <Field.Label fontSize="xs">Duration</Field.Label>
-                        <Input
-                          size="sm"
-                          placeholder="30 days"
-                          value={med.duration}
-                          onChange={(e) => updateMedicine(idx, 'duration', e.target.value)}
-                        />
-                      </Field.Root>
-                      {medicines.length > 1 && (
-                        <Button size="sm" variant="ghost" colorPalette="red" alignSelf="flex-end" onClick={() => removeMedicine(idx)}>
-                          <MdDelete />
-                        </Button>
-                      )}
-                    </Grid>
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-
             <Field.Root>
-              <Field.Label>Additional Notes</Field.Label>
+              <Field.Label>Notes</Field.Label>
               <Textarea
+                name="notes"
                 rows={3}
                 placeholder="Follow-up instructions, dietary advice…"
-                value={form.notes}
-                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
               />
             </Field.Root>
 
             <Flex gap={3} justify="flex-end">
-              <Button variant="outline" onClick={() => navigate(`/hospital/appointments/${id}`)}>Cancel</Button>
-              <Button type="submit" colorPalette="teal" loading={saved} loadingText="Uploading…">
+              <Button variant="outline" onClick={() => navigate(backPath)}>Cancel</Button>
+              <Button type="submit" colorPalette="teal" loading={uploading} loadingText="Uploading…">
                 <MdUpload /> Upload Prescription
               </Button>
             </Flex>

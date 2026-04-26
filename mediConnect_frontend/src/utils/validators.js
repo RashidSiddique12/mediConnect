@@ -1,13 +1,3 @@
-/**
- * @file validators.js
- * @description Input validation functions for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- * 
- * OWASP Security Considerations:
- * - Server-side validation should also be implemented
- * - These are for UX improvement only
- */
 
 /**
  * Validate email format

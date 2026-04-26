@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Patient Home — welcome dashboard with quick actions and stats.
- * JIRA: HAA-PAT-001 #comment Patient home UI
- */
-
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
@@ -14,7 +8,7 @@ import {
   MdSearch, MdCalendarToday, MdDescription, MdStar, MdLocalHospital, MdPerson, MdArrowForward,
 } from 'react-icons/md'
 import { FaHeartbeat } from 'react-icons/fa'
-import { fetchDashboardRequest } from '@/pages/dashboard/dashboardSlice'
+import * as dashboardSlice from '@/features/dashboard/dashboardSlice'
 
 const STATUS_COLOR = { confirmed: 'green', pending: 'orange', completed: 'teal', cancelled: 'red' }
 
@@ -24,7 +18,7 @@ export default function PatientHome() {
   const { data, loading } = useSelector((s) => s.dashboard)
   const user = useSelector((s) => s.auth.user)
 
-  useEffect(() => { dispatch(fetchDashboardRequest()) }, [dispatch])
+  useEffect(() => { dispatch(dashboardSlice.fetchDashboardRequest()) }, [dispatch])
 
   if (loading) return <Center h="60vh"><Spinner size="xl" color="brand.500" /></Center>
 

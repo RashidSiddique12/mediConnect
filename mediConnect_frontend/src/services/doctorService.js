@@ -1,9 +1,3 @@
-/**
- * @file doctorService.js
- * @description Doctor API service for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- */
 
 import api from './api';
 import { DOCTOR_ENDPOINTS } from '../constants/apiEndpoints';

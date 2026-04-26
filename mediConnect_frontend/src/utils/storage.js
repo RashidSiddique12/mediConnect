@@ -1,15 +1,3 @@
-/**
- * @file storage.js
- * @description Local storage utility functions for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- * 
- * OWASP Security Considerations:
- * - Do not store sensitive data in localStorage
- * - Use httpOnly cookies for tokens when possible
- * - Clear storage on logout
- */
-
 const STORAGE_PREFIX = 'mediconnect_';
 
 /**

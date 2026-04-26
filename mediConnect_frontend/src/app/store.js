@@ -1,11 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Redux store — configures Redux Toolkit with Saga middleware,
- *              disables default thunk, enables Redux DevTools.
- * OWASP: Avoid storing sensitive data (passwords, raw tokens) in Redux state.
- * JIRA: HAA-001 #comment Redux store configuration
- */
-
 import { configureStore } from '@reduxjs/toolkit'
 import createSagaMiddleware from 'redux-saga'
 import rootReducer from './rootReducer'

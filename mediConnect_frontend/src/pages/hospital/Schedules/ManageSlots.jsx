@@ -1,23 +1,42 @@
-/**
- * @author Healthcare Appointment App
- * @description Manage Slots — configure time slots for a specific doctor's schedule.
- * JIRA: HAA-HOSP-007 #comment Manage slots UI
- */
-
-import { useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   Box, Stack, Heading, Text, Flex, Button, Card, Grid, Badge, Input, Field,
   Select, createListCollection,
 } from '@chakra-ui/react'
-import { MdArrowBack, MdAdd, MdDelete, MdSchedule } from 'react-icons/md'
-import { MOCK_DOCTORS, MOCK_SCHEDULES } from '@/services/mockApi'
+import { MdAdd, MdDelete, MdSchedule } from 'react-icons/md'
+import PageHeader from '@/components/common/PageHeader'
+import EmptyState from '@/components/common/EmptyState'
+import Loader from '@/components/common/Loader'
+import * as doctorSlice from '@/features/doctors/doctorSlice'
+import { selectCurrentDoctor, selectDoctorsLoading } from '@/features/doctors/doctorSelectors'
+import * as scheduleSlice from '@/features/schedules/scheduleSlice'
+import { selectSchedules, selectSchedulesSaving } from '@/features/schedules/scheduleSelectors'
 
-const dayCollection = createListCollection({
-  items: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(
-    (d) => ({ label: d, value: d })
-  ),
+const DAY_COLLECTION = createListCollection({
+  items: [
+    { label: 'Sunday', value: 0 },
+    { label: 'Monday', value: 1 },
+    { label: 'Tuesday', value: 2 },
+    { label: 'Wednesday', value: 3 },
+    { label: 'Thursday', value: 4 },
+    { label: 'Friday', value: 5 },
+    { label: 'Saturday', value: 6 },
+  ],
 })
+
+const DURATION_COLLECTION = createListCollection({
+  items: [
+    { label: '15 min', value: 15 },
+    { label: '20 min', value: 20 },
+    { label: '30 min', value: 30 },
+    { label: '45 min', value: 45 },
+    { label: '60 min', value: 60 },
+  ],
+})
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function generateSlots(start, end, intervalMins = 30) {
   const slots = []
@@ -37,76 +56,99 @@ function generateSlots(start, end, intervalMins = 30) {
 export default function ManageSlots() {
   const { doctorId } = useParams()
   const navigate = useNavigate()
-  const doctor = MOCK_DOCTORS.find((d) => d.id === doctorId)
-  const existingSchedules = MOCK_SCHEDULES.filter((s) => s.doctorId === doctorId)
+  const dispatch = useDispatch()
+  const doctor = useSelector(selectCurrentDoctor)
+  const doctorLoading = useSelector(selectDoctorsLoading)
+  const schedules = useSelector(selectSchedules)
+  const saving = useSelector(selectSchedulesSaving)
 
-  const [schedules, setSchedules] = useState(existingSchedules)
-  const [form, setForm] = useState({ day: '', start: '09:00', end: '13:00' })
-  const [saved, setSaved] = useState(false)
+  const [form, setForm] = useState({
+    dayOfWeek: '', startTime: '09:00', endTime: '13:00', slotDuration: 30,
+  })
 
-  if (!doctor) return (
-    <Box textAlign="center" py={12} color="gray.400">
-      <Text>Doctor not found.</Text>
-    </Box>
+  useEffect(() => {
+    dispatch(doctorSlice.fetchDoctorByIdRequest(doctorId))
+    dispatch(scheduleSlice.fetchSchedulesRequest({ doctorId }))
+    return () => dispatch(doctorSlice.clearCurrentDoctor())
+  }, [dispatch, doctorId])
+
+  const doctorSchedules = useMemo(
+    () => schedules.filter((s) => (s.doctorId?._id || s.doctorId) === doctorId),
+    [schedules, doctorId],
   )
+
+  if (doctorLoading) return <Loader />
+
+  if (!doctor && !doctorLoading) {
+    return (
+      <EmptyState
+        title="Doctor not found"
+        description="The doctor you're looking for doesn't exist"
+        actionLabel="Back to Schedules"
+        onAction={() => navigate('/hospital/schedules')}
+      />
+    )
+  }
 
   const handleAddSchedule = (e) => {
     e.preventDefault()
-    if (!form.day) return
-    const slots = generateSlots(form.start, form.end)
-    const newSch = {
-      id: `sch-${Date.now()}`,
+    if (form.dayOfWeek === '') return
+    dispatch(scheduleSlice.createScheduleRequest({
       doctorId,
-      doctorName: doctor.name,
-      day: form.day,
-      start: form.start,
-      end: form.end,
-      slots,
-    }
-    setSchedules((prev) => [...prev, newSch])
-    setForm({ day: '', start: '09:00', end: '13:00' })
+      dayOfWeek: Number(form.dayOfWeek),
+      startTime: form.startTime,
+      endTime: form.endTime,
+      slotDuration: Number(form.slotDuration),
+    }))
+    setForm({ dayOfWeek: '', startTime: '09:00', endTime: '13:00', slotDuration: 30 })
   }
 
-  const removeSchedule = (id) => setSchedules((prev) => prev.filter((s) => s.id !== id))
-
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => navigate('/hospital/schedules'), 1200)
-  }
+  const handleRemoveSchedule = (id) =>
+    dispatch(scheduleSlice.deleteScheduleRequest(id))
 
   return (
     <Stack gap={6} maxW="800px">
-      <Flex align="center" gap={3}>
-        <Button variant="ghost" colorPalette="teal" onClick={() => navigate('/hospital/schedules')}>
-          <MdArrowBack /> Back
-        </Button>
-        <Box>
-          <Heading size="lg">Manage Slots</Heading>
-          <Text color="gray.500" fontSize="sm">{doctor.name} — {doctor.specialty}</Text>
-        </Box>
-      </Flex>
+      <PageHeader
+        title="Manage Slots"
+        subtitle={`${doctor?.name} — ${doctor?.specialtyIds?.[0]?.name || 'General'}`}
+        backTo="/hospital/schedules"
+      />
 
-      {saved && (
-        <Box bg="teal.50" border="1px solid" borderColor="teal.200" p={4} rounded="lg">
-          <Text color="teal.700" fontWeight="600">✓ Schedule saved! Redirecting…</Text>
-        </Box>
-      )}
-
-      {/* Add New Schedule */}
+      {/* ─── Add New Schedule ─── */}
       <Card.Root shadow="sm" rounded="xl">
         <Card.Header>
           <Heading size="md">Add Schedule Block</Heading>
         </Card.Header>
         <Card.Body as="form" onSubmit={handleAddSchedule}>
-          <Grid templateColumns={{ base: '1fr', sm: '1fr 1fr 1fr auto' }} gap={3} alignItems="flex-end">
+          <Grid templateColumns={{ base: '1fr', sm: '1fr 1fr' }} gap={3}>
             <Field.Root required>
               <Field.Label>Day</Field.Label>
-              <Select.Root collection={dayCollection} onValueChange={(v) => setForm((p) => ({ ...p, day: v.value[0] || '' }))}>
+              <Select.Root
+                collection={DAY_COLLECTION}
+                onValueChange={(v) => setForm((p) => ({ ...p, dayOfWeek: v.value[0] ?? '' }))}
+              >
                 <Select.Trigger>
                   <Select.ValueText placeholder="Select day" />
                 </Select.Trigger>
                 <Select.Content>
-                  {dayCollection.items.map((item) => (
+                  {DAY_COLLECTION.items.map((item) => (
+                    <Select.Item key={item.value} item={item}>{item.label}</Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Slot Duration</Field.Label>
+              <Select.Root
+                collection={DURATION_COLLECTION}
+                value={[form.slotDuration]}
+                onValueChange={(v) => setForm((p) => ({ ...p, slotDuration: v.value[0] ?? 30 }))}
+              >
+                <Select.Trigger>
+                  <Select.ValueText />
+                </Select.Trigger>
+                <Select.Content>
+                  {DURATION_COLLECTION.items.map((item) => (
                     <Select.Item key={item.value} item={item}>{item.label}</Select.Item>
                   ))}
                 </Select.Content>
@@ -114,55 +156,68 @@ export default function ManageSlots() {
             </Field.Root>
             <Field.Root required>
               <Field.Label>Start Time</Field.Label>
-              <Input type="time" value={form.start} onChange={(e) => setForm((p) => ({ ...p, start: e.target.value }))} />
+              <Input
+                type="time"
+                value={form.startTime}
+                onChange={(e) => setForm((p) => ({ ...p, startTime: e.target.value }))}
+              />
             </Field.Root>
             <Field.Root required>
               <Field.Label>End Time</Field.Label>
-              <Input type="time" value={form.end} onChange={(e) => setForm((p) => ({ ...p, end: e.target.value }))} />
+              <Input
+                type="time"
+                value={form.endTime}
+                onChange={(e) => setForm((p) => ({ ...p, endTime: e.target.value }))}
+              />
             </Field.Root>
-            <Button type="submit" colorPalette="teal" alignSelf="flex-end">
-              <MdAdd /> Add
-            </Button>
           </Grid>
+          <Flex justify="flex-end" mt={4}>
+            <Button type="submit" colorPalette="teal" loading={saving}>
+              <MdAdd /> Add Schedule
+            </Button>
+          </Flex>
         </Card.Body>
       </Card.Root>
 
-      {/* Current Schedules */}
+      {/* ─── Current Schedules ─── */}
       <Stack gap={4}>
-        {schedules.length === 0 && (
-          <Box textAlign="center" py={8} color="gray.400" border="2px dashed" borderColor="gray.200" rounded="xl">
-            <MdSchedule size={40} style={{ margin: '0 auto 8px' }} />
-            <Text>No schedules yet. Add one above.</Text>
-          </Box>
+        <Text fontWeight="700" fontSize="md" color="gray.700">
+          Current Schedules ({doctorSchedules.length})
+        </Text>
+        {doctorSchedules.length === 0 ? (
+          <EmptyState
+            title="No schedules yet"
+            description="Add a schedule block above to get started"
+            icon={<MdSchedule size={36} />}
+          />
+        ) : (
+          doctorSchedules.map((s) => {
+            const previewSlots = generateSlots(s.startTime, s.endTime, s.slotDuration)
+            return (
+              <Card.Root key={s._id} shadow="sm" rounded="xl">
+                <Card.Body>
+                  <Flex justify="space-between" align="center" mb={3}>
+                    <Flex align="center" gap={2}>
+                      <Badge colorPalette="teal" size="md">{DAY_NAMES[s.dayOfWeek]}</Badge>
+                      <Text fontSize="sm" color="gray.600">{s.startTime} – {s.endTime}</Text>
+                      <Badge colorPalette="blue" size="sm">{previewSlots.length} slots</Badge>
+                      <Badge colorPalette="purple" size="sm">{s.slotDuration}min</Badge>
+                    </Flex>
+                    <Button size="xs" variant="ghost" colorPalette="red" onClick={() => handleRemoveSchedule(s._id)}>
+                      <MdDelete />
+                    </Button>
+                  </Flex>
+                  <Flex gap={2} wrap="wrap">
+                    {previewSlots.map((slot) => (
+                      <Badge key={slot} colorPalette="gray" variant="outline" size="sm">{slot}</Badge>
+                    ))}
+                  </Flex>
+                </Card.Body>
+              </Card.Root>
+            )
+          })
         )}
-        {schedules.map((s) => (
-          <Card.Root key={s.id} shadow="sm" rounded="xl">
-            <Card.Body>
-              <Flex justify="space-between" align="center" mb={3}>
-                <Flex align="center" gap={2}>
-                  <Badge colorPalette="teal" size="md">{s.day}</Badge>
-                  <Text fontSize="sm" color="gray.600">{s.start} – {s.end}</Text>
-                  <Badge colorPalette="blue" size="sm">{s.slots.length} slots</Badge>
-                </Flex>
-                <Button size="xs" variant="ghost" colorPalette="red" onClick={() => removeSchedule(s.id)}>
-                  <MdDelete />
-                </Button>
-              </Flex>
-              <Flex gap={2} wrap="wrap">
-                {s.slots.map((slot) => (
-                  <Badge key={slot} colorPalette="gray" variant="outline" size="sm">{slot}</Badge>
-                ))}
-              </Flex>
-            </Card.Body>
-          </Card.Root>
-        ))}
       </Stack>
-
-      {schedules.length > 0 && (
-        <Flex justify="flex-end">
-          <Button colorPalette="teal" onClick={handleSave}>Save All Schedules</Button>
-        </Flex>
-      )}
     </Stack>
   )
 }

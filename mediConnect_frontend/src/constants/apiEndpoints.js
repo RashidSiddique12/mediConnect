@@ -1,14 +1,3 @@
-/**
- * @file apiEndpoints.js
- * @description Centralized API endpoint definitions for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- * 
- * OWASP Security Considerations:
- * - All endpoints should use HTTPS in production
- * - API versioning for backward compatibility
- */
-
 const API_VERSION = '/api/v1';
 
 export const AUTH_ENDPOINTS = {

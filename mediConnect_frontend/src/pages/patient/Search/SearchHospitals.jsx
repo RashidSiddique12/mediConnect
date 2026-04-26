@@ -1,23 +1,28 @@
-/**
- * @author Healthcare Appointment App
- * @description Search Hospitals — patient finds and explores hospitals.
- * JIRA: HAA-PAT-003 #comment Search hospitals UI
- */
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Input, Card, Grid, Button,
+  Box, Stack, Heading, Text, Flex, Input, Card, Grid, Button, Spinner, Center,
 } from '@chakra-ui/react'
 import { MdSearch, MdLocalHospital, MdLocationOn, MdStar, MdPerson, MdArrowForward } from 'react-icons/md'
-import { MOCK_HOSPITALS } from '@/services/mockApi'
+import * as hospitalSlice from '@/features/hospitals/hospitalSlice'
+import * as hospitalSelectors from '@/features/hospitals/hospitalSelectors'
 
 export default function SearchHospitals() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const hospitals = useSelector(hospitalSelectors.selectHospitals)
+  const loading = useSelector(hospitalSelectors.selectHospitalsLoading)
   const [search, setSearch] = useState('')
 
-  const filtered = MOCK_HOSPITALS.filter(
-    (h) => h.name.toLowerCase().includes(search.toLowerCase()) || h.city.toLowerCase().includes(search.toLowerCase()),
+  useEffect(() => {
+    dispatch(hospitalSlice.fetchHospitalsRequest())
+  }, [dispatch])
+
+  if (loading) return <Center py={12}><Spinner size="xl" color="teal.500" /></Center>
+
+  const filtered = hospitals.filter(
+    (h) => h.name.toLowerCase().includes(search.toLowerCase()) || (h.address?.city || '').toLowerCase().includes(search.toLowerCase()),
   )
 
   return (
@@ -65,7 +70,7 @@ export default function SearchHospitals() {
                   <Text fontWeight="700" fontSize="md">{h.name}</Text>
                   <Flex align="center" gap={1} color="gray.500" mt={1}>
                     <MdLocationOn size={14} />
-                    <Text fontSize="xs">{h.city}</Text>
+                    <Text fontSize="xs">{h.address?.city || 'N/A'}</Text>
                   </Flex>
                 </Box>
               </Flex>
@@ -75,18 +80,18 @@ export default function SearchHospitals() {
                   <Text fontSize="xs" color="gray.500">Doctors</Text>
                   <Flex justify="center" align="center" gap={1}>
                     <MdPerson size={12} color="#0b9c9c" />
-                    <Text fontWeight="700" fontSize="sm" color="teal.700">{h.totalDoctors}</Text>
+                    <Text fontWeight="700" fontSize="sm" color="teal.700">{h.totalDoctors || 0}</Text>
                   </Flex>
                 </Box>
                 <Box textAlign="center" bg="orange.50" rounded="md" py={2}>
                   <Text fontSize="xs" color="gray.500">Visits</Text>
-                  <Text fontWeight="700" fontSize="sm" color="orange.500">{h.totalAppointments}</Text>
+                  <Text fontWeight="700" fontSize="sm" color="orange.500">{h.totalAppointments || 0}</Text>
                 </Box>
                 <Box textAlign="center" bg="yellow.50" rounded="md" py={2}>
                   <Text fontSize="xs" color="gray.500">Rating</Text>
                   <Flex justify="center" align="center" gap={1}>
                     <MdStar size={12} color="#F6AD55" />
-                    <Text fontWeight="700" fontSize="sm" color="yellow.700">{h.rating}</Text>
+                    <Text fontWeight="700" fontSize="sm" color="yellow.700">{h.rating || 0}</Text>
                   </Flex>
                 </Box>
               </Grid>
@@ -94,7 +99,7 @@ export default function SearchHospitals() {
               <Button
                 w="full"
                 colorPalette="teal"
-                onClick={() => navigate(`/patient/doctors?hospital=${h.id}`)}
+                onClick={() => navigate(`/patient/doctors?hospital=${h._id}`)}
               >
                 View Doctors <MdArrowForward />
               </Button>

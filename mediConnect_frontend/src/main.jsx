@@ -1,8 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description App entry point — mounts React, wraps with ChakraProvider and Redux Provider.
- * JIRA: HAA-001 #comment main.jsx bootstrap
- */
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

@@ -1,9 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Login page — email/password form with hospital theme and demo credentials.
- * OWASP: Input is controlled and not eval'd. No XSS surface exposed.
- * JIRA: HAA-004 #comment Login UI
- */
 
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -23,7 +17,7 @@ import {
 } from '@chakra-ui/react'
 import { MdEmail, MdLock, MdLocalHospital } from 'react-icons/md'
 import { FaHospitalUser } from 'react-icons/fa'
-import { loginRequest } from './authSlice'
+import * as authSlice from '@/features/auth/authSlice'
 
 const DEMO_CREDENTIALS = [
   { role: 'Super Admin',    email: 'admin@healthcare.com',    password: 'Admin@123',    color: 'red'    },
@@ -55,7 +49,7 @@ export default function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    dispatch(loginRequest(form))
+    dispatch(authSlice.loginRequest(form))
   }
 
   return (

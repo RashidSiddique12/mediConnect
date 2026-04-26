@@ -1,16 +1,14 @@
-/**
- * @author Healthcare Appointment App
- * @description Submit Review — patient rates and reviews their doctor after appointment.
- * JIRA: HAA-PAT-009 #comment Submit review UI
- */
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Button, Card, Badge, Avatar, Textarea, Field,
+  Box, Stack, Heading, Text, Flex, Button, Card, Badge, Avatar, Textarea, Field, Spinner, Center,
 } from '@chakra-ui/react'
 import { MdArrowBack, MdStar, MdCheckCircle } from 'react-icons/md'
-import { MOCK_APPOINTMENTS } from '@/services/mockApi'
+import * as appointmentSlice from '@/features/appointments/appointmentSlice'
+import * as appointmentSelectors from '@/features/appointments/appointmentSelectors'
+import * as reviewSlice from '@/features/reviews/reviewSlice'
+import * as reviewSelectors from '@/features/reviews/reviewSelectors'
 
 function StarInput({ value, onChange }) {
   const [hovered, setHovered] = useState(0)
@@ -39,11 +37,26 @@ const RATING_LABELS = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Very Good', 5: 'Exc
 export default function SubmitReview() {
   const { appointmentId } = useParams()
   const navigate = useNavigate()
-  const appointment = MOCK_APPOINTMENTS.find((a) => a.id === appointmentId)
+  const dispatch = useDispatch()
+  const appointment = useSelector(appointmentSelectors.selectCurrentAppointment)
+  const loading = useSelector(appointmentSelectors.selectAppointmentsLoading)
+  const submitted = useSelector(reviewSelectors.selectReviewSubmitted)
 
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    dispatch(appointmentSlice.fetchAppointmentByIdRequest(appointmentId))
+    return () => dispatch(reviewSlice.resetReviewSubmission())
+  }, [dispatch, appointmentId])
+
+  useEffect(() => {
+    if (submitted) {
+      setTimeout(() => navigate('/patient/appointments'), 2500)
+    }
+  }, [submitted, navigate])
+
+  if (loading) return <Center py={12}><Spinner size="xl" color="teal.500" /></Center>
 
   if (!appointment) return (
     <Box textAlign="center" py={12} color="gray.400">
@@ -51,11 +64,19 @@ export default function SubmitReview() {
     </Box>
   )
 
+  const doctorName = appointment.doctorId?.name || 'Doctor'
+  const specialtyName = appointment.doctorId?.specialtyId?.name || 'General'
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!rating) return
-    setSubmitted(true)
-    setTimeout(() => navigate('/patient/appointments'), 2500)
+    dispatch(reviewSlice.submitReviewRequest({
+      appointmentId,
+      doctorId: appointment.doctorId?._id || appointment.doctorId,
+      hospitalId: appointment.hospitalId?._id || appointment.hospitalId,
+      rating,
+      comment,
+    }))
   }
 
   if (submitted) return (
@@ -90,12 +111,12 @@ export default function SubmitReview() {
         <Card.Body>
           <Flex align="center" gap={4}>
             <Avatar.Root size="lg" bg="white" flexShrink={0}>
-              <Avatar.Fallback name={appointment.doctorName} color="teal.700" fontSize="xl" />
+              <Avatar.Fallback name={doctorName} color="teal.700" fontSize="xl" />
             </Avatar.Root>
             <Box>
-              <Text fontWeight="700" fontSize="lg">{appointment.doctorName}</Text>
-              <Badge bg="teal.500" color="white" size="sm">{appointment.specialty}</Badge>
-              <Text opacity={0.7} fontSize="sm" mt={1}>{appointment.date}</Text>
+              <Text fontWeight="700" fontSize="lg">{doctorName}</Text>
+              <Badge bg="teal.500" color="white" size="sm">{specialtyName}</Badge>
+              <Text opacity={0.7} fontSize="sm" mt={1}>{new Date(appointment.appointmentDate || appointment.date).toLocaleDateString()}</Text>
             </Box>
           </Flex>
         </Card.Body>

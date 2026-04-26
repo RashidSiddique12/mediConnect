@@ -1,10 +1,3 @@
-/**
- * @file appointmentService.js
- * @description Appointment API service for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- */
-
 import api from './api';
 import { APPOINTMENT_ENDPOINTS } from '../constants/apiEndpoints';
 

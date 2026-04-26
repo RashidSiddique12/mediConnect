@@ -1,8 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Dashboard page — example Chakra UI layout with stats and table.
- * JIRA: HAA-005 #comment Dashboard UI
- */
 
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -18,7 +13,7 @@ import {
   Table,
   Card,
 } from '@chakra-ui/react'
-import { fetchDashboardRequest } from './dashboardSlice'
+import * as dashboardSlice from '@/features/dashboard/dashboardSlice'
 
 const STAT_CARDS = [
   { label: 'Total Appointments', value: '128', color: 'blue' },
@@ -44,7 +39,7 @@ export default function Dashboard() {
   const { loading } = useSelector((state) => state.dashboard)
 
   useEffect(() => {
-    dispatch(fetchDashboardRequest())
+    dispatch(dashboardSlice.fetchDashboardRequest())
   }, [dispatch])
 
   if (loading) {

@@ -1,10 +1,3 @@
-/**
- * @file useAuth.js
- * @description Custom hook for authentication state and actions
- * @author Healthcare App Team
- * @created 2026-04-15
- */
-
 import { useSelector, useDispatch } from 'react-redux';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';

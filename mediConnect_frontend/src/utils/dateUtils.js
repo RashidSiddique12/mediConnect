@@ -1,11 +1,4 @@
 /**
- * @file dateUtils.js
- * @description Date utility functions for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- */
-
-/**
  * Format date to display string
  * @param {Date|string} date
  * @param {string} format - 'short' | 'long' | 'time'

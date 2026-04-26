@@ -1,24 +1,8 @@
-/**
- * @file authService.js
- * @description Authentication API service for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- * 
- * OWASP Security Considerations:
- * - Secure token storage
- * - XSS prevention
- * - CSRF protection
- */
-
 import api from './api';
 import { AUTH_ENDPOINTS } from '../constants/apiEndpoints';
 
 export const authService = {
-  /**
-   * Login user with email and password
-   * @param {Object} credentials - { email, password }
-   * @returns {Promise} API response with tokens
-   */
+
   login: async (credentials) => {
     const response = await api.post(AUTH_ENDPOINTS.LOGIN, credentials);
     return response.data;

@@ -1,16 +1,16 @@
-/**
- * @author Healthcare Appointment App
- * @description Book Appointment — patient selects date, slot, and confirms booking.
- * JIRA: HAA-PAT-006 #comment Book appointment UI
- */
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Button, Card, Badge, Grid, Avatar, Input, Field,
+  Box, Stack, Heading, Text, Flex, Button, Card, Badge, Grid, Avatar, Input, Field, Spinner, Center,
 } from '@chakra-ui/react'
 import { MdArrowBack, MdCalendarToday, MdAccessTime, MdCheckCircle } from 'react-icons/md'
-import { MOCK_DOCTORS, MOCK_HOSPITALS, MOCK_SCHEDULES } from '@/services/mockApi'
+import * as doctorSlice from '@/features/doctors/doctorSlice'
+import * as doctorSelectors from '@/features/doctors/doctorSelectors'
+import * as scheduleSlice from '@/features/schedules/scheduleSlice'
+import * as scheduleSelectors from '@/features/schedules/scheduleSelectors'
+import * as appointmentSlice from '@/features/appointments/appointmentSlice'
+import * as appointmentSelectors from '@/features/appointments/appointmentSelectors'
 
 const DAY_MAP = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6, Sunday: 0 }
 
@@ -27,15 +27,30 @@ function getNextDate(dayName) {
 export default function BookAppointment() {
   const { doctorId } = useParams()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
-  const doctor = MOCK_DOCTORS.find((d) => d.id === doctorId)
-  const hospital = doctor ? MOCK_HOSPITALS.find((h) => h.id === doctor.hospitalId) : null
-  const schedules = MOCK_SCHEDULES.filter((s) => s.doctorId === doctorId)
+  const doctor = useSelector(doctorSelectors.selectCurrentDoctor)
+  const schedules = useSelector(scheduleSelectors.selectSchedules)
+  const loading = useSelector(doctorSelectors.selectDoctorsLoading)
+  const booked = useSelector(appointmentSelectors.selectBooked)
 
   const [selectedSchedule, setSelectedSchedule] = useState(null)
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [notes, setNotes] = useState('')
-  const [booked, setBooked] = useState(false)
+
+  useEffect(() => {
+    dispatch(doctorSlice.fetchDoctorByIdRequest(doctorId))
+    dispatch(scheduleSlice.fetchSchedulesRequest(doctorId))
+    return () => dispatch(appointmentSlice.resetBooking())
+  }, [dispatch, doctorId])
+
+  useEffect(() => {
+    if (booked) {
+      setTimeout(() => navigate('/patient/appointments'), 2000)
+    }
+  }, [booked, navigate])
+
+  if (loading) return <Center py={12}><Spinner size="xl" color="teal.500" /></Center>
 
   if (!doctor) return (
     <Box textAlign="center" py={12} color="gray.400">
@@ -43,10 +58,19 @@ export default function BookAppointment() {
     </Box>
   )
 
+  const doctorName = doctor.userId?.name || doctor.name || 'Doctor'
+  const hospital = doctor.hospitalId
+  const specialtyName = (doctor.specialtyIds || []).map((s) => s.name || s).join(', ') || 'General'
+
   const handleBook = () => {
     if (!selectedSchedule || !selectedSlot) return
-    setBooked(true)
-    setTimeout(() => navigate('/patient/appointments'), 2000)
+    dispatch(appointmentSlice.bookAppointmentRequest({
+      doctorId,
+      hospitalId: hospital?._id || hospital,
+      appointmentDate: getNextDate(selectedSchedule.day),
+      timeSlot: selectedSlot,
+      notes,
+    }))
   }
 
   if (booked) return (
@@ -55,7 +79,7 @@ export default function BookAppointment() {
         <MdCheckCircle />
       </Box>
       <Heading size="xl" color="teal.600" mb={2}>Appointment Booked!</Heading>
-      <Text color="gray.500">With {doctor.name} on {selectedSchedule?.day} at {selectedSlot}</Text>
+      <Text color="gray.500">With {doctorName} on {selectedSchedule?.day} at {selectedSlot}</Text>
       <Button colorPalette="teal" mt={6} onClick={() => navigate('/patient/appointments')}>
         View My Appointments
       </Button>
@@ -79,16 +103,16 @@ export default function BookAppointment() {
         <Card.Body>
           <Flex align="center" gap={4}>
             <Avatar.Root size="lg" bg="white" flexShrink={0}>
-              <Avatar.Fallback name={doctor.name} color="teal.700" fontSize="xl" />
+              <Avatar.Fallback name={doctorName} color="teal.700" fontSize="xl" />
             </Avatar.Root>
             <Box>
-              <Heading size="md" color="white">{doctor.name}</Heading>
-              <Badge bg="teal.500" color="white" mt={1}>{doctor.specialty}</Badge>
-              <Text opacity={0.8} fontSize="sm" mt={1}>{hospital?.name}</Text>
+              <Heading size="md" color="white">{doctorName}</Heading>
+              <Badge bg="teal.500" color="white" mt={1}>{specialtyName}</Badge>
+              <Text opacity={0.8} fontSize="sm" mt={1}>{hospital?.name || 'N/A'}</Text>
             </Box>
             <Box ml="auto" textAlign="right">
               <Text opacity={0.7} fontSize="xs">Consultation Fee</Text>
-              <Heading size="lg" color="white">${doctor.fee}</Heading>
+              <Heading size="lg" color="white">${doctor.consultationFee || doctor.fee || 0}</Heading>
             </Box>
           </Flex>
         </Card.Body>
@@ -109,18 +133,18 @@ export default function BookAppointment() {
             <Grid templateColumns="repeat(auto-fill, minmax(180px, 1fr))" gap={3}>
               {schedules.map((s) => (
                 <Box
-                  key={s.id}
+                  key={s._id}
                   border="2px solid"
-                  borderColor={selectedSchedule?.id === s.id ? 'teal.500' : 'gray.200'}
-                  bg={selectedSchedule?.id === s.id ? 'teal.50' : 'white'}
+                  borderColor={selectedSchedule?._id === s._id ? 'teal.500' : 'gray.200'}
+                  bg={selectedSchedule?._id === s._id ? 'teal.50' : 'white'}
                   p={3}
                   rounded="lg"
                   cursor="pointer"
                   transition="all 0.15s"
                   onClick={() => { setSelectedSchedule(s); setSelectedSlot(null) }}
                 >
-                  <Text fontWeight="700" color={selectedSchedule?.id === s.id ? 'teal.700' : 'gray.800'}>{s.day}</Text>
-                  <Text fontSize="xs" color="gray.500">{s.start} – {s.end}</Text>
+                  <Text fontWeight="700" color={selectedSchedule?._id === s._id ? 'teal.700' : 'gray.800'}>{s.day}</Text>
+                  <Text fontSize="xs" color="gray.500">{s.startTime || s.start} – {s.endTime || s.end}</Text>
                   <Text fontSize="xs" color="teal.600" mt={1}>{getNextDate(s.day)}</Text>
                 </Box>
               ))}
@@ -138,7 +162,7 @@ export default function BookAppointment() {
               <Heading size="sm">Step 2: Choose Time Slot</Heading>
             </Flex>
             <Flex gap={2} wrap="wrap">
-              {selectedSchedule.slots.map((slot) => (
+              {(selectedSchedule.slots || []).map((slot) => (
                 <Box
                   key={slot}
                   border="2px solid"
@@ -171,7 +195,7 @@ export default function BookAppointment() {
             <Stack gap={4} mb={4}>
               <Flex justify="space-between">
                 <Text color="gray.500">Doctor</Text>
-                <Text fontWeight="600">{doctor.name}</Text>
+                <Text fontWeight="600">{doctorName}</Text>
               </Flex>
               <Flex justify="space-between">
                 <Text color="gray.500">Day & Time</Text>
@@ -183,7 +207,7 @@ export default function BookAppointment() {
               </Flex>
               <Flex justify="space-between">
                 <Text color="gray.500">Fee</Text>
-                <Text fontWeight="700" color="teal.600">${doctor.fee}</Text>
+                <Text fontWeight="700" color="teal.600">${doctor.consultationFee || doctor.fee || 0}</Text>
               </Flex>
             </Stack>
 

@@ -1,10 +1,3 @@
-/**
- * @file appointmentStatus.js
- * @description Appointment status constants for MediConnect
- * @author Healthcare App Team
- * @created 2026-04-15
- */
-
 export const APPOINTMENT_STATUS = {
   BOOKED: 'booked',
   COMPLETED: 'completed',

@@ -1,32 +1,39 @@
-/**
- * @author Healthcare Appointment App
- * @description Specialty List — super admin manages medical specialties.
- * JIRA: HAA-ADM-004 #comment Admin specialties UI
- */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {
-  Box, Stack, Heading, Text, Flex, Badge, Input, Button, Card, Grid, Dialog, Field,
+  Box, Stack, Heading, Text, Flex, Badge, Input, Button, Card, Grid, Dialog, Field, Spinner, Center,
 } from '@chakra-ui/react'
-import { MdAdd, MdSearch, MdMedicalServices, MdEdit, MdDelete } from 'react-icons/md'
-import { MOCK_SPECIALTIES } from '@/services/mockApi'
+import { MdAdd, MdSearch, MdMedicalServices, MdEdit, MdDelete, MdClose, MdWarning } from 'react-icons/md'
+import * as specialtySlice from '@/features/specialties/specialtySlice'
+import * as specialtySelectors from '@/features/specialties/specialtySelectors'
 
 export default function SpecialtyList() {
-  const [specialties, setSpecialties] = useState(MOCK_SPECIALTIES)
+  const dispatch = useDispatch()
+  const specialties = useSelector(specialtySelectors.selectSpecialties)
+  const loading = useSelector(specialtySelectors.selectSpecialtiesLoading)
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const [form, setForm] = useState({ name: '', icon: '🏥' })
 
+  useEffect(() => {
+    dispatch(specialtySlice.fetchSpecialtiesRequest())
+  }, [dispatch])
+
+  if (loading) return <Center py={12}><Spinner size="xl" color="teal.500" /></Center>
+
   const filtered = specialties.filter((s) => s.name.toLowerCase().includes(search.toLowerCase()))
+  const totalDoctors = specialties.reduce((sum, s) => sum + (s.totalDoctors || 0), 0)
 
   const handleAdd = (e) => {
     e.preventDefault()
     if (editTarget) {
-      setSpecialties((prev) => prev.map((s) => s.id === editTarget.id ? { ...s, ...form } : s))
+      dispatch(specialtySlice.updateSpecialtyRequest({ id: editTarget._id, data: form }))
       setEditTarget(null)
     } else {
-      setSpecialties((prev) => [{ id: `s-${Date.now()}`, ...form, totalDoctors: 0 }, ...prev])
+      dispatch(specialtySlice.addSpecialtyRequest(form))
     }
     setForm({ name: '', icon: '🏥' })
     setShowAdd(false)
@@ -34,21 +41,34 @@ export default function SpecialtyList() {
 
   const openEdit = (s) => {
     setEditTarget(s)
-    setForm({ name: s.name, icon: s.icon })
+    setForm({ name: s.name, icon: s.icon || '🏥' })
     setShowAdd(true)
   }
 
-  const handleDelete = (id) => {
-    setSpecialties((prev) => prev.filter((s) => s.id !== id))
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      dispatch(specialtySlice.deleteSpecialtyRequest(deleteTarget._id))
+      setDeleteTarget(null)
+    }
   }
 
   return (
     <Stack gap={6}>
+      {/* Header */}
       <Flex justify="space-between" align="center" wrap="wrap" gap={3}>
-        <Box>
-          <Heading size="lg">Medical Specialties</Heading>
-          <Text color="gray.500" fontSize="sm">{specialties.length} specialties configured</Text>
-        </Box>
+        <Flex align="center" gap={3}>
+          <Box color="purple.500" bg="purple.50" p={2.5} rounded="xl">
+            <MdMedicalServices size={22} />
+          </Box>
+          <Box>
+            <Heading size="lg">Medical Specialties</Heading>
+            <Flex align="center" gap={2} mt={0.5}>
+              <Text color="gray.500" fontSize="sm">{specialties.length} specialties</Text>
+              <Text color="gray.300">&bull;</Text>
+              <Text color="gray.500" fontSize="sm">{totalDoctors} doctors total</Text>
+            </Flex>
+          </Box>
+        </Flex>
         <Button colorPalette="teal" onClick={() => { setEditTarget(null); setForm({ name: '', icon: '🏥' }); setShowAdd(true) }}>
           <MdAdd /> Add Specialty
         </Button>
@@ -59,29 +79,92 @@ export default function SpecialtyList() {
         <Box position="absolute" left={3} top="50%" transform="translateY(-50%)" color="gray.400" zIndex={1}>
           <MdSearch size={18} />
         </Box>
-        <Input pl={9} placeholder="Search specialties…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Input
+          pl={9}
+          pr={search ? 8 : 3}
+          placeholder="Search specialties…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {search && (
+          <Box
+            position="absolute"
+            right={3}
+            top="50%"
+            transform="translateY(-50%)"
+            color="gray.400"
+            cursor="pointer"
+            onClick={() => setSearch('')}
+            zIndex={1}
+            _hover={{ color: 'gray.600' }}
+          >
+            <MdClose size={16} />
+          </Box>
+        )}
       </Box>
 
+      {search && (
+        <Text fontSize="sm" color="gray.500">
+          Showing {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
+        </Text>
+      )}
+
       {/* Specialty Grid */}
-      <Grid templateColumns="repeat(auto-fill, minmax(220px, 1fr))" gap={4}>
+      <Grid templateColumns="repeat(auto-fill, minmax(240px, 1fr))" gap={4}>
         {filtered.map((s) => (
-          <Card.Root key={s.id} shadow="sm" rounded="xl" _hover={{ shadow: 'md', transform: 'translateY(-2px)' }} transition="all 0.2s">
+          <Card.Root
+            key={s._id}
+            shadow="sm"
+            rounded="xl"
+            _hover={{ shadow: 'md', transform: 'translateY(-2px)' }}
+            transition="all 0.2s"
+            borderWidth="1px"
+            borderColor="gray.100"
+          >
             <Card.Body>
-              <Flex justify="space-between" align="flex-start" mb={3}>
-                <Box fontSize="3xl">{s.icon}</Box>
-                <Flex gap={1}>
-                  <Button size="xs" variant="ghost" colorPalette="teal" onClick={() => openEdit(s)}>
+              <Flex justify="space-between" align="flex-start" mb={4}>
+                <Box
+                  fontSize="2xl"
+                  bg="gray.50"
+                  w="48px"
+                  h="48px"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  rounded="xl"
+                >
+                  {s.icon || '🏥'}
+                </Box>
+                <Flex gap={0.5}>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    colorPalette="teal"
+                    onClick={() => openEdit(s)}
+                    title="Edit specialty"
+                  >
                     <MdEdit />
                   </Button>
-                  <Button size="xs" variant="ghost" colorPalette="red" onClick={() => handleDelete(s.id)}>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    colorPalette="red"
+                    onClick={() => setDeleteTarget(s)}
+                    title="Delete specialty"
+                  >
                     <MdDelete />
                   </Button>
                 </Flex>
               </Flex>
-              <Text fontWeight="700" fontSize="md">{s.name}</Text>
-              <Flex align="center" gap={2} mt={2}>
-                <MdMedicalServices color="#0b9c9c" size={14} />
-                <Text fontSize="xs" color="gray.500">{s.totalDoctors} doctors</Text>
+              <Text fontWeight="700" fontSize="md" mb={2}>{s.name}</Text>
+              <Flex align="center" justify="space-between">
+                <Flex align="center" gap={2}>
+                  <MdMedicalServices color="#0b9c9c" size={14} />
+                  <Text fontSize="sm" color="gray.600" fontWeight="500">{s.totalDoctors || 0} doctors</Text>
+                </Flex>
+                {(s.totalDoctors || 0) > 0 && (
+                  <Badge colorPalette="teal" size="sm" variant="subtle">Active</Badge>
+                )}
               </Flex>
             </Card.Body>
           </Card.Root>
@@ -89,10 +172,60 @@ export default function SpecialtyList() {
       </Grid>
 
       {filtered.length === 0 && (
-        <Box textAlign="center" py={10} color="gray.400">
-          <Text>No specialties found</Text>
-        </Box>
+        <Card.Root shadow="sm" rounded="xl">
+          <Card.Body textAlign="center" py={10}>
+            <MdMedicalServices size={48} style={{ margin: '0 auto 12px', opacity: 0.3, color: '#CBD5E0' }} />
+            <Text fontWeight="600" color="gray.500" mb={1}>No specialties found</Text>
+            <Text fontSize="sm" color="gray.400">
+              {search ? `No results for "${search}". Try a different keyword.` : 'Add your first medical specialty to get started.'}
+            </Text>
+            {!search && (
+              <Button
+                size="sm"
+                colorPalette="teal"
+                mt={4}
+                onClick={() => { setEditTarget(null); setForm({ name: '', icon: '🏥' }); setShowAdd(true) }}
+              >
+                <MdAdd /> Add Specialty
+              </Button>
+            )}
+          </Card.Body>
+        </Card.Root>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog.Root open={!!deleteTarget} onOpenChange={(e) => { if (!e.open) setDeleteTarget(null) }}>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content rounded="xl" maxW="400px">
+            <Dialog.Header>
+              <Flex align="center" gap={2}>
+                <Box color="red.500"><MdWarning size={20} /></Box>
+                <Dialog.Title>Delete Specialty</Dialog.Title>
+              </Flex>
+            </Dialog.Header>
+            <Dialog.Body>
+              <Text fontSize="sm" color="gray.600">
+                Are you sure you want to delete{' '}
+                <Text as="span" fontWeight="700">{deleteTarget?.name}</Text>?
+              </Text>
+              {(deleteTarget?.totalDoctors || 0) > 0 && (
+                <Box bg="red.50" p={3} rounded="lg" mt={3}>
+                  <Text fontSize="xs" color="red.600" fontWeight="500">
+                    This specialty has {deleteTarget.totalDoctors} doctor{deleteTarget.totalDoctors > 1 ? 's' : ''} assigned. They will need to be reassigned.
+                  </Text>
+                </Box>
+              )}
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+              <Button colorPalette="red" onClick={confirmDelete}>
+                <MdDelete /> Delete
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
 
       {/* Add/Edit Modal */}
       <Dialog.Root open={showAdd} onOpenChange={(e) => { setShowAdd(e.open); if (!e.open) setEditTarget(null) }}>
@@ -100,7 +233,10 @@ export default function SpecialtyList() {
         <Dialog.Positioner>
           <Dialog.Content rounded="xl" maxW="400px">
             <Dialog.Header>
-              <Dialog.Title>{editTarget ? 'Edit Specialty' : 'Add Specialty'}</Dialog.Title>
+              <Flex align="center" gap={2}>
+                <Box color="teal.500"><MdMedicalServices size={20} /></Box>
+                <Dialog.Title>{editTarget ? 'Edit Specialty' : 'Add Specialty'}</Dialog.Title>
+              </Flex>
             </Dialog.Header>
             <Dialog.Body>
               <Box as="form" id="specialty-form" onSubmit={handleAdd}>
@@ -112,6 +248,7 @@ export default function SpecialtyList() {
                   <Field.Root>
                     <Field.Label>Icon (emoji)</Field.Label>
                     <Input placeholder="🏥" value={form.icon} onChange={(e) => setForm((p) => ({ ...p, icon: e.target.value }))} />
+                    <Text fontSize="xs" color="gray.400" mt={1}>Choose an emoji to represent this specialty</Text>
                   </Field.Root>
                 </Stack>
               </Box>

@@ -1,8 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description AppRoutes — full application route tree with role-based lazy loading.
- * JIRA: HAA-007 #comment App routing setup
- */
 
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
@@ -18,6 +13,9 @@ const Register = lazy(() => import('@/pages/auth/Register'))
 // ─── Super Admin ──────────────────────────────────────────────────────────────
 const AdminDashboard    = lazy(() => import('@/pages/admin/Dashboard'))
 const HospitalList      = lazy(() => import('@/pages/admin/Hospitals/HospitalList'))
+const HospitalDetail    = lazy(() => import('@/pages/admin/Hospitals/HospitalDetail'))
+const AddHospital       = lazy(() => import('@/pages/admin/Hospitals/AddHospital'))
+const EditHospital      = lazy(() => import('@/pages/admin/Hospitals/EditHospital'))
 const UserList          = lazy(() => import('@/pages/admin/Users/UserList'))
 const SpecialtyList     = lazy(() => import('@/pages/admin/Specialties/SpecialtyList'))
 const ReviewModeration  = lazy(() => import('@/pages/admin/Reviews/ReviewModeration'))
@@ -57,8 +55,11 @@ export default function AppRoutes() {
         <Route element={<ProtectedRoute allowedRoles={[USER_ROLES.SUPER_ADMIN]} />}>
           <Route element={<MainLayout role="admin" />}>
             <Route path="/admin"              element={<AdminDashboard />} />
-            <Route path="/admin/hospitals"    element={<HospitalList />} />
-            <Route path="/admin/users"        element={<UserList />} />
+            <Route path="/admin/hospitals"           element={<HospitalList />} />
+            <Route path="/admin/hospitals/new"       element={<AddHospital />} />
+            <Route path="/admin/hospitals/edit/:id"  element={<EditHospital />} />
+            <Route path="/admin/hospitals/:id"       element={<HospitalDetail />} />
+            <Route path="/admin/users"               element={<UserList />} />
             <Route path="/admin/specialties"  element={<SpecialtyList />} />
             <Route path="/admin/reviews"      element={<ReviewModeration />} />
           </Route>

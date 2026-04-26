@@ -1,10 +1,3 @@
-/**
- * @file useDebounce.js
- * @description Custom hook for debouncing values
- * @author Healthcare App Team
- * @created 2026-04-15
- */
-
 import { useState, useEffect } from 'react';
 
 /**

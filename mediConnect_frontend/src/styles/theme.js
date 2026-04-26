@@ -1,8 +1,3 @@
-/**
- * @author Healthcare Appointment App
- * @description Chakra UI v3 theme — MediConnect hospital teal palette, fonts, and overrides.
- * JIRA: HAA-003 #comment Chakra theme setup
- */
 
 import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react'
 
