@@ -1,4 +1,3 @@
-
 /**
  * Check if value is empty (null, undefined, empty string, empty array)
  * @param {*} value
@@ -6,9 +5,9 @@
  */
 export const isEmpty = (value) => {
   if (value === null || value === undefined) return true;
-  if (typeof value === 'string' && value.trim() === '') return true;
+  if (typeof value === "string" && value.trim() === "") return true;
   if (Array.isArray(value) && value.length === 0) return true;
-  if (typeof value === 'object' && Object.keys(value).length === 0) return true;
+  if (typeof value === "object" && Object.keys(value).length === 0) return true;
   return false;
 };
 
@@ -18,7 +17,7 @@ export const isEmpty = (value) => {
  * @returns {string}
  */
 export const capitalize = (str) => {
-  if (!str) return '';
+  if (!str) return "";
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
@@ -70,11 +69,11 @@ export const debounce = (func, wait = 300) => {
  * @returns {string}
  */
 export const getInitials = (name) => {
-  if (!name) return '';
+  if (!name) return "";
   return name
-    .split(' ')
+    .split(" ")
     .map((word) => word.charAt(0).toUpperCase())
-    .join('')
+    .join("")
     .slice(0, 2);
 };
 

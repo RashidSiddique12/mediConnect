@@ -1,6 +1,5 @@
-
-import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Grid,
@@ -12,42 +11,60 @@ import {
   Center,
   Table,
   Card,
-} from '@chakra-ui/react'
-import * as dashboardSlice from '@/features/dashboard/dashboardSlice'
+} from "@chakra-ui/react";
+import * as dashboardSlice from "@/features/dashboard/dashboardSlice";
 
 const STAT_CARDS = [
-  { label: 'Total Appointments', value: '128', color: 'blue' },
-  { label: 'Pending', value: '14', color: 'orange' },
-  { label: 'Completed', value: '102', color: 'green' },
-  { label: 'Cancelled', value: '12', color: 'red' },
-]
+  { label: "Total Appointments", value: "128", color: "blue" },
+  { label: "Pending", value: "14", color: "orange" },
+  { label: "Completed", value: "102", color: "green" },
+  { label: "Cancelled", value: "12", color: "red" },
+];
 
 const MOCK_APPOINTMENTS = [
-  { id: 1, patient: 'Alice Johnson', doctor: 'Dr. Smith', date: '2026-04-15', status: 'Confirmed' },
-  { id: 2, patient: 'Bob Williams', doctor: 'Dr. Patel', date: '2026-04-16', status: 'Pending' },
-  { id: 3, patient: 'Carol Davis', doctor: 'Dr. Lee', date: '2026-04-17', status: 'Cancelled' },
-]
+  {
+    id: 1,
+    patient: "Alice Johnson",
+    doctor: "Dr. Smith",
+    date: "2026-04-15",
+    status: "Confirmed",
+  },
+  {
+    id: 2,
+    patient: "Bob Williams",
+    doctor: "Dr. Patel",
+    date: "2026-04-16",
+    status: "Pending",
+  },
+  {
+    id: 3,
+    patient: "Carol Davis",
+    doctor: "Dr. Lee",
+    date: "2026-04-17",
+    status: "Cancelled",
+  },
+];
 
 const STATUS_COLOR = {
-  Confirmed: 'green',
-  Pending: 'orange',
-  Cancelled: 'red',
-}
+  Confirmed: "green",
+  Pending: "orange",
+  Cancelled: "red",
+};
 
 export default function Dashboard() {
-  const dispatch = useDispatch()
-  const { loading } = useSelector((state) => state.dashboard)
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.dashboard);
 
   useEffect(() => {
-    dispatch(dashboardSlice.fetchDashboardRequest())
-  }, [dispatch])
+    dispatch(dashboardSlice.fetchDashboardRequest());
+  }, [dispatch]);
 
   if (loading) {
     return (
       <Center h="60vh">
         <Spinner size="xl" color="primary.500" />
       </Center>
-    )
+    );
   }
 
   return (
@@ -78,7 +95,7 @@ export default function Dashboard() {
         <Box overflowX="auto" rounded="xl" shadow="sm" borderWidth="1px">
           <Table.Root>
             <Table.Header>
-              <Table.Row bg="gray.50" _dark={{ bg: 'gray.700' }}>
+              <Table.Row bg="gray.50" _dark={{ bg: "gray.700" }}>
                 <Table.ColumnHeader>#</Table.ColumnHeader>
                 <Table.ColumnHeader>Patient</Table.ColumnHeader>
                 <Table.ColumnHeader>Doctor</Table.ColumnHeader>
@@ -105,5 +122,5 @@ export default function Dashboard() {
         </Box>
       </Box>
     </Stack>
-  )
+  );
 }

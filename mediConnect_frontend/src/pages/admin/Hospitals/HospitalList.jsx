@@ -1,65 +1,97 @@
-
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useDispatch, useSelector } from 'react-redux'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  Box, Stack, Heading, Text, Button, Flex, Input, Spinner, Center,
-} from '@chakra-ui/react'
-import { MdLocalHospital, MdAdd, MdSearch, MdClose } from 'react-icons/md'
-import * as hospitalSlice from '@/features/hospitals/hospitalSlice'
-import * as hospitalSelectors from '@/features/hospitals/hospitalSelectors'
-import DataTable from '@/components/common/DataTable'
-import StatCard from './componets/StatCard'
-import useHospitalColumns from './componets/useHospitalColumns'
-import EmptyState from '@/components/common/EmptyState'
-import ConfirmToggleDialog from './componets/ConfirmToggleDialog'
-import { STATS } from './componets/constants'
+  Box,
+  Stack,
+  Heading,
+  Text,
+  Button,
+  Flex,
+  Input,
+  Spinner,
+  Center,
+} from "@chakra-ui/react";
+import { MdLocalHospital, MdAdd, MdSearch, MdClose } from "react-icons/md";
+import * as hospitalSlice from "@/features/hospitals/hospitalSlice";
+import * as hospitalSelectors from "@/features/hospitals/hospitalSelectors";
+import DataTable from "@/components/common/DataTable";
+import StatCard from "./componets/StatCard";
+import useHospitalColumns from "./componets/useHospitalColumns";
+import EmptyState from "@/components/common/EmptyState";
+import ConfirmToggleDialog from "./componets/ConfirmToggleDialog";
+import { STATS } from "./componets/constants";
+import useDebounce from "@/hooks/useDebounce";
 
 export default function HospitalList() {
-  const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const hospitals = useSelector(hospitalSelectors.selectHospitals)
-  const loading = useSelector(hospitalSelectors.selectHospitalsLoading)
+  const hospitals = useSelector(hospitalSelectors.selectHospitals);
+  const pagination = useSelector(hospitalSelectors.selectHospitalsPagination);
+  const loading = useSelector(hospitalSelectors.selectHospitalsLoading);
 
-  const [search, setSearch] = useState('')
-  const [confirmToggle, setConfirmToggle] = useState(null)
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [confirmToggle, setConfirmToggle] = useState(null);
+  const debouncedSearch = useDebounce(search, 400);
 
   useEffect(() => {
-    dispatch(hospitalSlice.fetchHospitalsRequest())
-  }, [dispatch])
+    setPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    dispatch(
+      hospitalSlice.fetchHospitalsRequest({
+        page,
+        limit: pageSize,
+        ...(debouncedSearch && { search: debouncedSearch }),
+      }),
+    );
+  }, [dispatch, page, pageSize, debouncedSearch]);
 
   if (loading) {
-    return <Center py={16}><Spinner size="xl" color="teal.500" /></Center>
+    return (
+      <Center py={16}>
+        <Spinner size="xl" color="teal.500" />
+      </Center>
+    );
   }
 
-  const filtered = hospitals.filter(
-    (h) =>
-      h.name.toLowerCase().includes(search.toLowerCase()) ||
-      (h.address?.city || '').toLowerCase().includes(search.toLowerCase()),
-  )
-
-  const activeCount = hospitals.filter((h) => h.status === 'active').length
-  const inactiveCount = hospitals.length - activeCount
-  const statValues = { total: hospitals.length, active: activeCount, inactive: inactiveCount }
+  const activeCount = pagination?.total
+    ? hospitals.filter((h) => h.status === "active").length
+    : 0;
+  const statValues = {
+    total: pagination?.total || hospitals.length,
+    active: activeCount,
+    inactive: (pagination?.total || hospitals.length) - activeCount,
+  };
 
   const handleToggle = (id) => {
-    dispatch(hospitalSlice.toggleHospitalStatusRequest(id))
-    setConfirmToggle(null)
-  }
+    dispatch(hospitalSlice.toggleHospitalStatusRequest(id));
+    setConfirmToggle(null);
+  };
 
   const columns = useHospitalColumns(
     (id) => navigate(`/admin/hospitals/${id}`),
     (id) => navigate(`/admin/hospitals/edit/${id}`),
     (h) => setConfirmToggle(h),
-  )
+  );
 
   return (
     <Stack gap={6}>
       {/* ── Page header ── */}
       <Flex justify="space-between" align="center" wrap="wrap" gap={3}>
         <Flex align="center" gap={3}>
-          <Flex align="center" justify="center" color="teal.500" bg="teal.50" p={2.5} rounded="xl">
+          <Flex
+            align="center"
+            justify="center"
+            color="teal.500"
+            bg="teal.50"
+            p={2.5}
+            rounded="xl"
+          >
             <MdLocalHospital size={22} />
           </Flex>
           <Box>
@@ -69,7 +101,10 @@ export default function HospitalList() {
             </Text>
           </Box>
         </Flex>
-        <Button colorPalette="teal" onClick={() => navigate('/admin/hospitals/new')}>
+        <Button
+          colorPalette="teal"
+          onClick={() => navigate("/admin/hospitals/new")}
+        >
           <MdAdd /> Add Hospital
         </Button>
       </Flex>
@@ -77,14 +112,27 @@ export default function HospitalList() {
       {/* ── Summary stats ── */}
       <Flex gap={3} wrap="wrap">
         {STATS.map((s) => (
-          <StatCard key={s.key} label={s.label} value={statValues[s.key]} color={s.color} icon={s.icon} />
+          <StatCard
+            key={s.key}
+            label={s.label}
+            value={statValues[s.key]}
+            color={s.color}
+            icon={s.icon}
+          />
         ))}
       </Flex>
 
       {/* ── Search bar ── */}
       <Flex align="center" gap={3} wrap="wrap">
         <Box position="relative" maxW="400px" flex="1">
-          <Box position="absolute" left={3} top="50%" transform="translateY(-50%)" color="gray.400" zIndex={1}>
+          <Box
+            position="absolute"
+            left={3}
+            top="50%"
+            transform="translateY(-50%)"
+            color="gray.400"
+            zIndex={1}
+          >
             <MdSearch size={18} />
           </Box>
           <Input
@@ -102,9 +150,9 @@ export default function HospitalList() {
               transform="translateY(-50%)"
               color="gray.400"
               cursor="pointer"
-              onClick={() => setSearch('')}
+              onClick={() => setSearch("")}
               zIndex={1}
-              _hover={{ color: 'gray.600' }}
+              _hover={{ color: "gray.600" }}
             >
               <MdClose size={16} />
             </Box>
@@ -113,23 +161,31 @@ export default function HospitalList() {
 
         {search && (
           <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
-            {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
+            {pagination?.total || hospitals.length} result
+            {(pagination?.total || hospitals.length) !== 1 ? "s" : ""} for
+            &ldquo;{search}&rdquo;
           </Text>
         )}
       </Flex>
 
       {/* ── Hospital table ── */}
-      {filtered.length > 0 ? (
+      {hospitals.length > 0 ? (
         <DataTable
           columns={columns}
-          data={filtered}
+          data={hospitals}
           rowKey="_id"
-          pageSize={10}
+          pageSize={pageSize}
           sortable
           hoverable
           colorPalette="teal"
           emptyText="No hospitals found"
           emptyIcon={<MdLocalHospital size={40} />}
+          serverTotal={pagination?.total || 0}
+          serverPage={page}
+          onPageChange={(p, size) => {
+            setPage(p);
+            setPageSize(size);
+          }}
         />
       ) : (
         <EmptyState
@@ -139,7 +195,7 @@ export default function HospitalList() {
           description="Get started by registering your first healthcare facility."
           actionLabel="Add Hospital"
           actionIcon={<MdAdd />}
-          onAction={() => navigate('/admin/hospitals/new')}
+          onAction={() => navigate("/admin/hospitals/new")}
         />
       )}
 
@@ -150,5 +206,5 @@ export default function HospitalList() {
         onCancel={() => setConfirmToggle(null)}
       />
     </Stack>
-  )
+  );
 }

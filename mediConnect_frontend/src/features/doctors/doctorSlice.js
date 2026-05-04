@@ -1,80 +1,82 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   list: [],
+  pagination: null,
   current: null,
   loading: false,
   saving: false,
   error: null,
-}
+};
 
 const doctorSlice = createSlice({
-  name: 'doctors',
+  name: "doctors",
   initialState,
   reducers: {
     fetchDoctorsRequest(state) {
-      state.loading = true
-      state.error = null
+      state.loading = true;
+      state.error = null;
     },
     fetchDoctorsSuccess(state, action) {
-      state.loading = false
-      state.list = action.payload
+      state.loading = false;
+      state.list = action.payload.data;
+      state.pagination = action.payload.pagination || null;
     },
     fetchDoctorsFailure(state, action) {
-      state.loading = false
-      state.error = action.payload
+      state.loading = false;
+      state.error = action.payload;
     },
     fetchDoctorByIdRequest(state) {
-      state.loading = true
-      state.current = null
-      state.error = null
+      state.loading = true;
+      state.current = null;
+      state.error = null;
     },
     fetchDoctorByIdSuccess(state, action) {
-      state.loading = false
-      state.current = action.payload
+      state.loading = false;
+      state.current = action.payload;
     },
     fetchDoctorByIdFailure(state, action) {
-      state.loading = false
-      state.error = action.payload
+      state.loading = false;
+      state.error = action.payload;
     },
     createDoctorRequest(state) {
-      state.saving = true
-      state.error = null
+      state.saving = true;
+      state.error = null;
     },
     createDoctorSuccess(state, action) {
-      state.saving = false
-      state.list.unshift(action.payload)
+      state.saving = false;
+      state.list.unshift(action.payload);
     },
     createDoctorFailure(state, action) {
-      state.saving = false
-      state.error = action.payload
+      state.saving = false;
+      state.error = action.payload;
     },
     updateDoctorRequest(state) {
-      state.saving = true
-      state.error = null
+      state.saving = true;
+      state.error = null;
     },
     updateDoctorSuccess(state, action) {
-      state.saving = false
-      const updated = action.payload
-      state.current = updated
-      state.list = state.list.map((d) => (d._id === updated._id ? updated : d))
+      state.saving = false;
+      const updated = action.payload;
+      state.current = updated;
+      state.list = state.list.map((d) => (d._id === updated._id ? updated : d));
     },
     updateDoctorFailure(state, action) {
-      state.saving = false
-      state.error = action.payload
+      state.saving = false;
+      state.error = action.payload;
     },
     deleteDoctorRequest() {},
     deleteDoctorSuccess(state, action) {
-      state.list = state.list.filter((d) => d._id !== action.payload)
+      state.list = state.list.filter((d) => d._id !== action.payload);
     },
     deleteDoctorFailure(state, action) {
-      state.error = action.payload
+      state.error = action.payload;
     },
     clearCurrentDoctor(state) {
-      state.current = null
+      state.current = null;
     },
   },
-})
+});
 
 const {
   fetchDoctorsRequest,
@@ -93,9 +95,9 @@ const {
   deleteDoctorSuccess,
   deleteDoctorFailure,
   clearCurrentDoctor,
-} = doctorSlice.actions
+} = doctorSlice.actions;
 
-const doctorReducer = doctorSlice.reducer
+const doctorReducer = doctorSlice.reducer;
 
 export {
   fetchDoctorsRequest,
@@ -115,4 +117,4 @@ export {
   deleteDoctorFailure,
   clearCurrentDoctor,
   doctorReducer,
-}
+};

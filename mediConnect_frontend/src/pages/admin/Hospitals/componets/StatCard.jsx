@@ -1,6 +1,4 @@
-import { Flex, Box, Text } from '@chakra-ui/react'
-
-
+import { Flex, Box, Text } from "@chakra-ui/react";
 
 export default function StatCard({ label, value, color, icon: Icon }) {
   return (
@@ -27,9 +25,13 @@ export default function StatCard({ label, value, color, icon: Icon }) {
         <Icon size={18} />
       </Flex>
       <Box>
-        <Text fontSize="xs" color={`${color}.600`} fontWeight="500">{label}</Text>
-        <Text fontSize="xl" fontWeight="700" color={`${color}.700`}>{value}</Text>
+        <Text fontSize="xs" color={`${color}.600`} fontWeight="500">
+          {label}
+        </Text>
+        <Text fontSize="xl" fontWeight="700" color={`${color}.700`}>
+          {value}
+        </Text>
       </Box>
     </Flex>
-  )
+  );
 }

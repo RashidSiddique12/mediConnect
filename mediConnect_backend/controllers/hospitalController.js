@@ -1,6 +1,9 @@
-const Hospital = require('../models/Hospital');
-const User = require('../models/User');
-const { success, created, paginated } = require('../utils/apiResponse');
+const Hospital = require("../models/Hospital");
+const Doctor = require("../models/Doctor");
+const Appointment = require("../models/Appointment");
+const Review = require("../models/Review");
+const User = require("../models/User");
+const { success, created, paginated } = require("../utils/apiResponse");
 
 // GET /api/v1/hospitals
 const getHospitals = async (req, res, next) => {
@@ -9,7 +12,10 @@ const getHospitals = async (req, res, next) => {
     const query = {};
 
     if (search) {
-      query.name = { $regex: search, $options: 'i' };
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { "address.city": { $regex: search, $options: "i" } },
+      ];
     }
     if (status) {
       query.status = status;
@@ -18,13 +24,60 @@ const getHospitals = async (req, res, next) => {
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const total = await Hospital.countDocuments(query);
     const hospitals = await Hospital.find(query)
-      .populate('specialties', 'name')
-      .populate('hospitalAdminId', 'name email')
+      .populate("specialties", "name")
+      .populate("hospitalAdminId", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit, 10));
+      .limit(parseInt(limit, 10))
+      .lean();
 
-    paginated(res, hospitals, {
+    const hospitalIds = hospitals.map((h) => h._id);
+
+    const [doctorCounts, appointmentCounts, ratingAverages] =
+      await Promise.all([
+        Doctor.aggregate([
+          { $match: { hospitalId: { $in: hospitalIds } } },
+          { $group: { _id: "$hospitalId", count: { $sum: 1 } } },
+        ]),
+        Appointment.aggregate([
+          { $match: { hospitalId: { $in: hospitalIds } } },
+          { $group: { _id: "$hospitalId", count: { $sum: 1 } } },
+        ]),
+        Review.aggregate([
+          {
+            $match: {
+              hospitalId: { $in: hospitalIds },
+              status: "approved",
+            },
+          },
+          { $group: { _id: "$hospitalId", avg: { $avg: "$rating" } } },
+        ]),
+      ]);
+
+    const doctorMap = Object.fromEntries(
+      doctorCounts.map((d) => [d._id.toString(), d.count]),
+    );
+    const appointmentMap = Object.fromEntries(
+      appointmentCounts.map((a) => [a._id.toString(), a.count]),
+    );
+    const ratingMap = Object.fromEntries(
+      ratingAverages.map((r) => [
+        r._id.toString(),
+        Math.round(r.avg * 10) / 10,
+      ]),
+    );
+
+    const enriched = hospitals.map((h) => {
+      const id = h._id.toString();
+      return {
+        ...h,
+        totalDoctors: doctorMap[id] || 0,
+        totalAppointments: appointmentMap[id] || 0,
+        rating: ratingMap[id] || 0,
+      };
+    });
+
+    paginated(res, enriched, {
       total,
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
@@ -35,15 +88,36 @@ const getHospitals = async (req, res, next) => {
   }
 };
 
+// GET /api/v1/hospitals/me
+const getMyHospital = async (req, res, next) => {
+  try {
+    const hospital = await Hospital.findOne({ hospitalAdminId: req.user._id })
+      .populate("specialties", "name")
+      .populate("hospitalAdminId", "name email");
+
+    if (!hospital) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No hospital found for this admin." });
+    }
+
+    success(res, hospital);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/v1/hospitals/:id
 const getHospitalById = async (req, res, next) => {
   try {
     const hospital = await Hospital.findById(req.params.id)
-      .populate('specialties', 'name')
-      .populate('hospitalAdminId', 'name email');
+      .populate("specialties", "name")
+      .populate("hospitalAdminId", "name email");
 
     if (!hospital) {
-      return res.status(404).json({ success: false, message: 'Hospital not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Hospital not found." });
     }
 
     success(res, hospital);
@@ -56,9 +130,20 @@ const getHospitalById = async (req, res, next) => {
 const createHospital = async (req, res, next) => {
   try {
     const {
-      name, type, address, phone, email, website, emergencyContact,
-      registrationNumber, description, specialties, hospitalAdminId,
-      operatingHours, facilities, insurancePanels,
+      name,
+      type,
+      address,
+      phone,
+      email,
+      website,
+      emergencyContact,
+      registrationNumber,
+      description,
+      specialties,
+      hospitalAdminId,
+      operatingHours,
+      facilities,
+      insurancePanels,
       admin,
     } = req.body;
 
@@ -68,14 +153,16 @@ const createHospital = async (req, res, next) => {
     if (admin && admin.email) {
       const existingUser = await User.findOne({ email: admin.email });
       if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Admin email already in use.' });
+        return res
+          .status(400)
+          .json({ success: false, message: "Admin email already in use." });
       }
       const adminUser = await User.create({
         name: admin.name,
         email: admin.email,
         password: admin.password,
-        phone: admin.phone || '',
-        role: 'hospital_admin',
+        phone: admin.phone || "",
+        role: "hospital_admin",
       });
       assignedAdminId = adminUser._id;
     }
@@ -83,23 +170,35 @@ const createHospital = async (req, res, next) => {
     // If hospitalAdminId provided directly, validate it's a hospital_admin
     if (hospitalAdminId && !admin) {
       const adminUser = await User.findById(hospitalAdminId);
-      if (!adminUser || adminUser.role !== 'hospital_admin') {
-        return res.status(400).json({ success: false, message: 'Invalid hospital admin user.' });
+      if (!adminUser || adminUser.role !== "hospital_admin") {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid hospital admin user." });
       }
     }
 
     const hospital = await Hospital.create({
-      name, type, address, phone, email, website, emergencyContact,
-      registrationNumber, description, specialties,
+      name,
+      type,
+      address,
+      phone,
+      email,
+      website,
+      emergencyContact,
+      registrationNumber,
+      description,
+      specialties,
       hospitalAdminId: assignedAdminId,
-      operatingHours, facilities, insurancePanels,
+      operatingHours,
+      facilities,
+      insurancePanels,
     });
 
     const populated = await Hospital.findById(hospital._id)
-      .populate('specialties', 'name')
-      .populate('hospitalAdminId', 'name email');
+      .populate("specialties", "name")
+      .populate("hospitalAdminId", "name email");
 
-    created(res, populated, 'Hospital created successfully');
+    created(res, populated, "Hospital created successfully");
   } catch (error) {
     next(error);
   }
@@ -110,22 +209,29 @@ const updateHospital = async (req, res, next) => {
   try {
     const hospital = await Hospital.findById(req.params.id);
     if (!hospital) {
-      return res.status(404).json({ success: false, message: 'Hospital not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Hospital not found." });
     }
 
     // Hospital admin can only update their own hospital
-    if (req.user.role === 'hospital_admin' && String(hospital.hospitalAdminId) !== String(req.user._id)) {
-      return res.status(403).json({ success: false, message: 'Access denied.' });
+    if (
+      req.user.role === "hospital_admin" &&
+      String(hospital.hospitalAdminId) !== String(req.user._id)
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied." });
     }
 
     const updated = await Hospital.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     })
-      .populate('specialties', 'name')
-      .populate('hospitalAdminId', 'name email');
+      .populate("specialties", "name")
+      .populate("hospitalAdminId", "name email");
 
-    success(res, updated, 'Hospital updated successfully');
+    success(res, updated, "Hospital updated successfully");
   } catch (error) {
     next(error);
   }
@@ -136,10 +242,12 @@ const deleteHospital = async (req, res, next) => {
   try {
     const hospital = await Hospital.findByIdAndDelete(req.params.id);
     if (!hospital) {
-      return res.status(404).json({ success: false, message: 'Hospital not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Hospital not found." });
     }
 
-    success(res, null, 'Hospital deleted successfully');
+    success(res, null, "Hospital deleted successfully");
   } catch (error) {
     next(error);
   }
@@ -150,13 +258,19 @@ const toggleHospitalStatus = async (req, res, next) => {
   try {
     const hospital = await Hospital.findById(req.params.id);
     if (!hospital) {
-      return res.status(404).json({ success: false, message: 'Hospital not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Hospital not found." });
     }
 
-    hospital.status = hospital.status === 'active' ? 'inactive' : 'active';
+    hospital.status = hospital.status === "active" ? "inactive" : "active";
     await hospital.save();
 
-    success(res, hospital, `Hospital ${hospital.status === 'active' ? 'activated' : 'deactivated'} successfully`);
+    success(
+      res,
+      hospital,
+      `Hospital ${hospital.status === "active" ? "activated" : "deactivated"} successfully`,
+    );
   } catch (error) {
     next(error);
   }
@@ -165,6 +279,7 @@ const toggleHospitalStatus = async (req, res, next) => {
 module.exports = {
   getHospitals,
   getHospitalById,
+  getMyHospital,
   createHospital,
   updateHospital,
   deleteHospital,

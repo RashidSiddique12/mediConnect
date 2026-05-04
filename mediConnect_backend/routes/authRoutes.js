@@ -1,8 +1,17 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { register, login, refreshToken, logout } = require('../controllers/authController');
-const { registerValidator, loginValidator, refreshTokenValidator } = require('../validators/authValidator');
-const validate = require('../middleware/validate');
+const {
+  register,
+  login,
+  refreshToken,
+  logout,
+} = require("../controllers/authController");
+const {
+  registerValidator,
+  loginValidator,
+  refreshTokenValidator,
+} = require("../validators/authValidator");
+const validate = require("../middleware/validate");
 
 /**
  * @swagger
@@ -56,7 +65,7 @@ const validate = require('../middleware/validate');
  *       409:
  *         description: Email already registered
  */
-router.post('/register', registerValidator, validate, register);
+router.post("/register", registerValidator, validate, register);
 
 /**
  * @swagger
@@ -103,7 +112,7 @@ router.post('/register', registerValidator, validate, register);
  *       403:
  *         description: Account deactivated
  */
-router.post('/login', loginValidator, validate, login);
+router.post("/login", loginValidator, validate, login);
 
 /**
  * @swagger
@@ -140,7 +149,7 @@ router.post('/login', loginValidator, validate, login);
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post('/refresh', refreshTokenValidator, validate, refreshToken);
+router.post("/refresh", refreshTokenValidator, validate, refreshToken);
 
 /**
  * @swagger
@@ -160,6 +169,6 @@ router.post('/refresh', refreshTokenValidator, validate, refreshToken);
  *       200:
  *         description: Logged out successfully
  */
-router.post('/logout', logout);
+router.post("/logout", logout);
 
 module.exports = router;

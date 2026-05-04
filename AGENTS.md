@@ -19,6 +19,7 @@
 - **React Icons only** (`react-icons/md` preferred) — no other icon libraries
 - **Responsive**: mobile-first with `{ base, md, lg }` breakpoints
 - Healthcare teal theme: use `colorPalette="teal"` for primary actions
+- **Page width**: every page's outermost `<Stack>` must use `w="100%"` — no `maxW` constraints on page-level containers
 
 ## Frontend — Component Patterns
 

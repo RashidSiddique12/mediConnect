@@ -4,17 +4,23 @@
  * @param {string} format - 'short' | 'long' | 'time'
  * @returns {string}
  */
-export const formatDate = (date, format = 'short') => {
+export const formatDate = (date, format = "short") => {
   const d = new Date(date);
-  
+
   const options = {
-    short: { year: 'numeric', month: 'short', day: 'numeric' },
-    long: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
-    time: { hour: '2-digit', minute: '2-digit' },
-    datetime: { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
+    short: { year: "numeric", month: "short", day: "numeric" },
+    long: { weekday: "long", year: "numeric", month: "long", day: "numeric" },
+    time: { hour: "2-digit", minute: "2-digit" },
+    datetime: {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    },
   };
 
-  return d.toLocaleDateString('en-US', options[format] || options.short);
+  return d.toLocaleDateString("en-US", options[format] || options.short);
 };
 
 /**
@@ -23,9 +29,9 @@ export const formatDate = (date, format = 'short') => {
  * @returns {string}
  */
 export const formatTimeSlot = (time) => {
-  const [hours, minutes] = time.split(':');
+  const [hours, minutes] = time.split(":");
   const h = parseInt(hours, 10);
-  const ampm = h >= 12 ? 'PM' : 'AM';
+  const ampm = h >= 12 ? "PM" : "AM";
   const displayHour = h % 12 || 12;
   return `${displayHour}:${minutes} ${ampm}`;
 };
@@ -36,8 +42,16 @@ export const formatTimeSlot = (time) => {
  * @returns {string}
  */
 export const getDayName = (dayIndex) => {
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  return days[dayIndex] || '';
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  return days[dayIndex] || "";
 };
 
 /**
@@ -75,19 +89,19 @@ export const isFuture = (date) => {
  * @returns {string}
  */
 export const getRelativeTime = (date) => {
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
   const now = new Date();
   const d = new Date(date);
   const diffInSeconds = Math.floor((d - now) / 1000);
-  
+
   const units = [
-    { unit: 'year', seconds: 31536000 },
-    { unit: 'month', seconds: 2592000 },
-    { unit: 'week', seconds: 604800 },
-    { unit: 'day', seconds: 86400 },
-    { unit: 'hour', seconds: 3600 },
-    { unit: 'minute', seconds: 60 },
-    { unit: 'second', seconds: 1 },
+    { unit: "year", seconds: 31536000 },
+    { unit: "month", seconds: 2592000 },
+    { unit: "week", seconds: 604800 },
+    { unit: "day", seconds: 86400 },
+    { unit: "hour", seconds: 3600 },
+    { unit: "minute", seconds: 60 },
+    { unit: "second", seconds: 1 },
   ];
 
   for (const { unit, seconds } of units) {
@@ -96,7 +110,7 @@ export const getRelativeTime = (date) => {
       return rtf.format(diffInSeconds > 0 ? value : -value, unit);
     }
   }
-  return 'just now';
+  return "just now";
 };
 
 /**

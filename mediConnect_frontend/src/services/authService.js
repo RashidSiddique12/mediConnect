@@ -1,8 +1,7 @@
-import api from './api';
-import { AUTH_ENDPOINTS } from '../constants/apiEndpoints';
+import api from "./api";
+import { AUTH_ENDPOINTS } from "../constants/apiEndpoints";
 
 export const authService = {
-
   login: async (credentials) => {
     const response = await api.post(AUTH_ENDPOINTS.LOGIN, credentials);
     return response.data;
@@ -33,7 +32,9 @@ export const authService = {
    * @returns {Promise} API response with new tokens
    */
   refreshToken: async (refreshToken) => {
-    const response = await api.post(AUTH_ENDPOINTS.REFRESH_TOKEN, { refreshToken });
+    const response = await api.post(AUTH_ENDPOINTS.REFRESH_TOKEN, {
+      refreshToken,
+    });
     return response.data;
   },
 

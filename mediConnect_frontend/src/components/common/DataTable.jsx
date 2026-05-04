@@ -1,13 +1,26 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo } from "react";
 import {
-  Box, Flex, Text, Table, Card, Select, Button, Portal,
-} from '@chakra-ui/react'
+  Box,
+  Flex,
+  Text,
+  Table,
+  Card,
+  Select,
+  Button,
+  Portal,
+} from "@chakra-ui/react";
 import {
-  MdChevronLeft, MdChevronRight, MdFirstPage, MdLastPage,
-  MdUnfoldMore, MdExpandLess, MdExpandMore, MdInbox,
-} from 'react-icons/md'
+  MdChevronLeft,
+  MdChevronRight,
+  MdFirstPage,
+  MdLastPage,
+  MdUnfoldMore,
+  MdExpandLess,
+  MdExpandMore,
+  MdInbox,
+} from "react-icons/md";
 
-const PAGE_SIZE_OPTIONS = [5, 10, 20, 50]
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50];
 
 /**
  * Reusable DataTable with pagination, sorting, and flexible column rendering.
@@ -27,6 +40,9 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50]
  * @param {ReactNode}[props.emptyIcon]   - Icon rendered in empty state.
  * @param {Function} [props.onRowClick]  - Called with (row) when a row is clicked.
  * @param {string}   [props.colorPalette]- Accent colour for pagination buttons (default: 'teal').
+ * @param {number}   [props.serverTotal] - Total row count from server (enables server-side pagination).
+ * @param {number}   [props.serverPage]  - Current page from server (1-based).
+ * @param {Function} [props.onPageChange]- Callback (page, rowsPerPage) when page or page-size changes (server mode).
  *
  * Column definition shape:
  * {
@@ -42,93 +58,127 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20, 50]
 export default function DataTable({
   columns = [],
   data = [],
-  rowKey = '_id',
+  rowKey = "_id",
   pageSize: initialPageSize = 10,
   sortable = true,
   pagination = true,
   striped = false,
   hoverable = true,
-  size = 'sm',
-  variant = 'outline',
-  emptyText = 'No data found',
+  size = "sm",
+  variant = "outline",
+  emptyText = "No data found",
   emptyIcon,
   onRowClick,
-  colorPalette = 'teal',
+  colorPalette = "teal",
+  serverTotal,
+  serverPage,
+  onPageChange,
 }) {
+  const isServerMode =
+    serverTotal != null && serverPage != null && onPageChange != null;
   /* ── Sorting state ── */
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' })
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   /* ── Pagination state ── */
-  const [currentPage, setCurrentPage] = useState(1)
-  const [rowsPerPage, setRowsPerPage] = useState(initialPageSize)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(initialPageSize);
 
   /* ── Sorting logic ── */
   const sortedData = useMemo(() => {
-    if (!sortConfig.key) return data
+    if (!sortConfig.key) return data;
 
-    const col = columns.find((c) => c.key === sortConfig.key)
-    const accessor = col?.accessor || ((row) => row[col?.key])
+    const col = columns.find((c) => c.key === sortConfig.key);
+    const accessor = col?.accessor || ((row) => row[col?.key]);
 
     return [...data].sort((a, b) => {
-      const aVal = accessor(a)
-      const bVal = accessor(b)
+      const aVal = accessor(a);
+      const bVal = accessor(b);
 
-      if (aVal == null) return 1
-      if (bVal == null) return -1
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
       }
-      const cmp = String(aVal).localeCompare(String(bVal), undefined, { sensitivity: 'base' })
-      return sortConfig.direction === 'asc' ? cmp : -cmp
-    })
-  }, [data, sortConfig, columns])
+      const cmp = String(aVal).localeCompare(String(bVal), undefined, {
+        sensitivity: "base",
+      });
+      return sortConfig.direction === "asc" ? cmp : -cmp;
+    });
+  }, [data, sortConfig, columns]);
 
   /* ── Pagination logic ── */
-  const totalRows = sortedData.length
-  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage))
-  const safePage = Math.min(currentPage, totalPages)
+  const totalRows = isServerMode ? serverTotal : sortedData.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+  const safePage = isServerMode
+    ? serverPage
+    : Math.min(currentPage, totalPages);
 
-  const paginatedData = pagination
-    ? sortedData.slice((safePage - 1) * rowsPerPage, safePage * rowsPerPage)
-    : sortedData
+  const paginatedData =
+    pagination && !isServerMode
+      ? sortedData.slice((safePage - 1) * rowsPerPage, safePage * rowsPerPage)
+      : sortedData;
 
-  const startRow = totalRows === 0 ? 0 : (safePage - 1) * rowsPerPage + 1
-  const endRow = Math.min(safePage * rowsPerPage, totalRows)
+  const startRow = totalRows === 0 ? 0 : (safePage - 1) * rowsPerPage + 1;
+  const endRow = Math.min(safePage * rowsPerPage, totalRows);
 
   /* ── Handlers ── */
   const handleSort = (key) => {
     setSortConfig((prev) =>
       prev.key === key
-        ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
-        : { key, direction: 'asc' },
-    )
-    setCurrentPage(1)
-  }
+        ? { key, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: "asc" },
+    );
+    if (!isServerMode) setCurrentPage(1);
+  };
 
-  const goToPage = (page) => setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  const goToPage = (page) => {
+    const target = Math.max(1, Math.min(page, totalPages));
+    if (isServerMode) {
+      onPageChange(target, rowsPerPage);
+    } else {
+      setCurrentPage(target);
+    }
+  };
 
   const handlePageSizeChange = (value) => {
-    setRowsPerPage(Number(value))
-    setCurrentPage(1)
-  }
+    const newSize = Number(value);
+    setRowsPerPage(newSize);
+    if (isServerMode) {
+      onPageChange(1, newSize);
+    } else {
+      setCurrentPage(1);
+    }
+  };
 
   const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return <MdUnfoldMore size={14} />
-    return sortConfig.direction === 'asc' ? <MdExpandLess size={14} /> : <MdExpandMore size={14} />
-  }
+    if (sortConfig.key !== key) return <MdUnfoldMore size={14} />;
+    return sortConfig.direction === "asc" ? (
+      <MdExpandLess size={14} />
+    ) : (
+      <MdExpandMore size={14} />
+    );
+  };
 
   /* ── Render ── */
   if (data.length === 0) {
     return (
       <Card.Root shadow="sm" rounded="xl">
         <Card.Body>
-          <Flex direction="column" align="center" py={12} gap={3} color="gray.400">
+          <Flex
+            direction="column"
+            align="center"
+            py={12}
+            gap={3}
+            color="gray.400"
+          >
             {emptyIcon || <MdInbox size={40} />}
-            <Text fontWeight="600" color="gray.500">{emptyText}</Text>
+            <Text fontWeight="600" color="gray.500">
+              {emptyText}
+            </Text>
           </Flex>
         </Card.Body>
       </Card.Root>
-    )
+    );
   }
 
   return (
@@ -139,10 +189,10 @@ export default function DataTable({
           <Table.Header>
             <Table.Row bg="gray.50">
               {columns.map((col, idx) => {
-                const isFirst = idx === 0
-                const isLast = idx === columns.length - 1
-                const isSortable = (col.sortable ?? sortable) && col.key
-                const align = col.align || 'left'
+                const isFirst = idx === 0;
+                const isLast = idx === columns.length - 1;
+                const isSortable = (col.sortable ?? sortable) && col.key;
+                const align = col.align || "left";
 
                 return (
                   <Table.ColumnHeader
@@ -154,25 +204,37 @@ export default function DataTable({
                     color="gray.600"
                     textAlign={align}
                     width={col.width}
-                    cursor={isSortable ? 'pointer' : 'default'}
+                    cursor={isSortable ? "pointer" : "default"}
                     userSelect="none"
                     onClick={isSortable ? () => handleSort(col.key) : undefined}
-                    _hover={isSortable ? { color: 'gray.800' } : undefined}
+                    _hover={isSortable ? { color: "gray.800" } : undefined}
                   >
                     <Flex
                       align="center"
                       gap={1}
-                      justify={align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'}
+                      justify={
+                        align === "center"
+                          ? "center"
+                          : align === "right"
+                            ? "flex-end"
+                            : "flex-start"
+                      }
                     >
                       {col.header}
                       {isSortable && (
-                        <Box color={sortConfig.key === col.key ? `${colorPalette}.500` : 'gray.400'}>
+                        <Box
+                          color={
+                            sortConfig.key === col.key
+                              ? `${colorPalette}.500`
+                              : "gray.400"
+                          }
+                        >
                           {getSortIcon(col.key)}
                         </Box>
                       )}
                     </Flex>
                   </Table.ColumnHeader>
-                )
+                );
               })}
             </Table.Row>
           </Table.Header>
@@ -182,18 +244,18 @@ export default function DataTable({
             {paginatedData.map((row, rowIdx) => (
               <Table.Row
                 key={row[rowKey] ?? rowIdx}
-                bg={striped && rowIdx % 2 === 1 ? 'gray.50' : undefined}
-                _hover={hoverable ? { bg: 'gray.50' } : undefined}
+                bg={striped && rowIdx % 2 === 1 ? "gray.50" : undefined}
+                _hover={hoverable ? { bg: "gray.50" } : undefined}
                 transition="background 0.15s"
-                cursor={onRowClick ? 'pointer' : 'default'}
+                cursor={onRowClick ? "pointer" : "default"}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
               >
                 {columns.map((col, colIdx) => {
-                  const isFirst = colIdx === 0
-                  const isLast = colIdx === columns.length - 1
-                  const accessor = col.accessor || ((r) => r[col.key])
-                  const cellValue = accessor(row)
-                  const align = col.align || 'left'
+                  const isFirst = colIdx === 0;
+                  const isLast = colIdx === columns.length - 1;
+                  const accessor = col.accessor || ((r) => r[col.key]);
+                  const cellValue = accessor(row);
+                  const align = col.align || "left";
 
                   return (
                     <Table.Cell
@@ -203,9 +265,11 @@ export default function DataTable({
                       py={3}
                       textAlign={align}
                     >
-                      {col.render ? col.render(cellValue, row) : (cellValue ?? '—')}
+                      {col.render
+                        ? col.render(cellValue, row)
+                        : (cellValue ?? "—")}
                     </Table.Cell>
-                  )
+                  );
                 })}
               </Table.Row>
             ))}
@@ -228,7 +292,9 @@ export default function DataTable({
         >
           {/* Rows-per-page selector */}
           <Flex align="center" gap={2}>
-            <Text fontSize="xs" color="gray.500" whiteSpace="nowrap">Rows per page</Text>
+            <Text fontSize="xs" color="gray.500" whiteSpace="nowrap">
+              Rows per page
+            </Text>
             <Select.Root
               size="xs"
               collection={pageSizeCollection}
@@ -284,15 +350,21 @@ export default function DataTable({
 
             {/* Page number pills */}
             {getPageNumbers(safePage, totalPages).map((p) =>
-              p === '...' ? (
-                <Text key={`dots-${Math.random()}`} fontSize="xs" px={1} color="gray.400" alignSelf="center">
+              p === "..." ? (
+                <Text
+                  key={`dots-${Math.random()}`}
+                  fontSize="xs"
+                  px={1}
+                  color="gray.400"
+                  alignSelf="center"
+                >
                   …
                 </Text>
               ) : (
                 <Button
                   key={p}
                   size="xs"
-                  variant={p === safePage ? 'solid' : 'ghost'}
+                  variant={p === safePage ? "solid" : "ghost"}
                   colorPalette={colorPalette}
                   onClick={() => goToPage(p)}
                   minW="28px"
@@ -326,27 +398,32 @@ export default function DataTable({
         </Flex>
       )}
     </Card.Root>
-  )
+  );
 }
 
 /* ── Helper: collection object for Chakra v3 Select ── */
-import { createListCollection } from '@chakra-ui/react'
+import { createListCollection } from "@chakra-ui/react";
 
 const pageSizeCollection = createListCollection({
-  items: PAGE_SIZE_OPTIONS.map((opt) => ({ label: String(opt), value: String(opt) })),
-})
+  items: PAGE_SIZE_OPTIONS.map((opt) => ({
+    label: String(opt),
+    value: String(opt),
+  })),
+});
 
 /* ── Helper: compute visible page numbers with ellipsis ── */
 function getPageNumbers(current, total) {
-  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
+  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
 
-  const pages = new Set([1, total, current, current - 1, current + 1])
-  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b)
+  const pages = new Set([1, total, current, current - 1, current + 1]);
+  const sorted = [...pages]
+    .filter((p) => p >= 1 && p <= total)
+    .sort((a, b) => a - b);
 
-  const result = []
+  const result = [];
   for (let i = 0; i < sorted.length; i++) {
-    if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.push('...')
-    result.push(sorted[i])
+    if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.push("...");
+    result.push(sorted[i]);
   }
-  return result
+  return result;
 }

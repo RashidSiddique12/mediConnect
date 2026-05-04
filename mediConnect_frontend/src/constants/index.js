@@ -1,4 +1,3 @@
-
-export * from './apiEndpoints';
-export * from './roles';
-export * from './appointmentStatus';
+export * from "./apiEndpoints";
+export * from "./roles";
+export * from "./appointmentStatus";

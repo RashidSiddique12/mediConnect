@@ -1,19 +1,25 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
-const validate = require('../middleware/validate');
-const { doctorValidator } = require('../validators/doctorValidator');
+const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/roleCheck");
+const validate = require("../middleware/validate");
+const { doctorValidator } = require("../validators/doctorValidator");
 const {
   getDoctors,
   getDoctorById,
+  getMyHospitalDoctors,
   createDoctor,
   updateDoctor,
   deleteDoctor,
-} = require('../controllers/doctorController');
-const { getSchedulesByDoctor, getAvailableSlots } = require('../controllers/scheduleController');
-const { getAppointmentsByDoctor } = require('../controllers/appointmentController');
-const { getReviewsByDoctor } = require('../controllers/reviewController');
+} = require("../controllers/doctorController");
+const {
+  getSchedulesByDoctor,
+  getAvailableSlots,
+} = require("../controllers/scheduleController");
+const {
+  getAppointmentsByDoctor,
+} = require("../controllers/appointmentController");
+const { getReviewsByDoctor } = require("../controllers/reviewController");
 
 /**
  * @swagger
@@ -56,7 +62,28 @@ const { getReviewsByDoctor } = require('../controllers/reviewController');
  *       200:
  *         description: Paginated list of doctors
  */
-router.get('/', getDoctors);
+router.get("/", getDoctors);
+
+/**
+ * @swagger
+ * /doctors/my-hospital:
+ *   get:
+ *     tags: [Doctors]
+ *     summary: List doctors of the authenticated hospital admin's hospital
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of doctors
+ *       404:
+ *         description: No hospital found for this admin
+ */
+router.get(
+  "/my-hospital",
+  auth,
+  roleCheck("hospital_admin"),
+  getMyHospitalDoctors,
+);
 
 /**
  * @swagger
@@ -76,7 +103,7 @@ router.get('/', getDoctors);
  *       404:
  *         description: Doctor not found
  */
-router.get('/:id', getDoctorById);
+router.get("/:id", getDoctorById);
 
 /**
  * @swagger
@@ -94,7 +121,7 @@ router.get('/:id', getDoctorById);
  *       200:
  *         description: List of active schedules
  */
-router.get('/:doctorId/schedules', getSchedulesByDoctor);
+router.get("/:doctorId/schedules", getSchedulesByDoctor);
 
 /**
  * @swagger
@@ -136,7 +163,7 @@ router.get('/:doctorId/schedules', getSchedulesByDoctor);
  *                       isAvailable:
  *                         type: boolean
  */
-router.get('/:doctorId/slots', getAvailableSlots);
+router.get("/:doctorId/slots", getAvailableSlots);
 
 /**
  * @swagger
@@ -154,7 +181,7 @@ router.get('/:doctorId/slots', getAvailableSlots);
  *       200:
  *         description: List of approved reviews
  */
-router.get('/:doctorId/reviews', getReviewsByDoctor);
+router.get("/:doctorId/reviews", getReviewsByDoctor);
 
 /**
  * @swagger
@@ -191,7 +218,12 @@ router.get('/:doctorId/reviews', getReviewsByDoctor);
  *       403:
  *         description: Forbidden
  */
-router.get('/:doctorId/appointments', auth, roleCheck('super_admin', 'hospital_admin'), getAppointmentsByDoctor);
+router.get(
+  "/:doctorId/appointments",
+  auth,
+  roleCheck("super_admin", "hospital_admin"),
+  getAppointmentsByDoctor,
+);
 
 /**
  * @swagger
@@ -237,7 +269,14 @@ router.get('/:doctorId/appointments', auth, roleCheck('super_admin', 'hospital_a
  *       401:
  *         description: Unauthorized
  */
-router.post('/', auth, roleCheck('hospital_admin', 'super_admin'), doctorValidator, validate, createDoctor);
+router.post(
+  "/",
+  auth,
+  roleCheck("hospital_admin", "super_admin"),
+  doctorValidator,
+  validate,
+  createDoctor,
+);
 
 /**
  * @swagger
@@ -285,7 +324,14 @@ router.post('/', auth, roleCheck('hospital_admin', 'super_admin'), doctorValidat
  *       404:
  *         description: Doctor not found
  */
-router.put('/:id', auth, roleCheck('hospital_admin', 'super_admin'), doctorValidator, validate, updateDoctor);
+router.put(
+  "/:id",
+  auth,
+  roleCheck("hospital_admin", "super_admin"),
+  doctorValidator,
+  validate,
+  updateDoctor,
+);
 
 /**
  * @swagger
@@ -309,6 +355,11 @@ router.put('/:id', auth, roleCheck('hospital_admin', 'super_admin'), doctorValid
  *       404:
  *         description: Doctor not found
  */
-router.delete('/:id', auth, roleCheck('hospital_admin', 'super_admin'), deleteDoctor);
+router.delete(
+  "/:id",
+  auth,
+  roleCheck("hospital_admin", "super_admin"),
+  deleteDoctor,
+);
 
 module.exports = router;

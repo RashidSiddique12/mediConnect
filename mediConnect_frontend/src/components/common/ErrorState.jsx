@@ -1,4 +1,4 @@
-import { Flex, Text, Button, Card, Heading, Code } from '@chakra-ui/react'
+import { Flex, Text, Button, Card, Heading, Code } from "@chakra-ui/react";
 import {
   MdErrorOutline,
   MdWifiOff,
@@ -7,45 +7,47 @@ import {
   MdCloudOff,
   MdRefresh,
   MdHome,
-} from 'react-icons/md'
+} from "react-icons/md";
 
 const ERROR_PRESETS = {
   generic: {
     icon: <MdErrorOutline size={36} />,
-    title: 'Something went wrong',
-    description: 'An unexpected error occurred. Please try again later.',
-    iconColor: 'red.400',
-    iconBg: 'red.50',
+    title: "Something went wrong",
+    description: "An unexpected error occurred. Please try again later.",
+    iconColor: "red.400",
+    iconBg: "red.50",
   },
   network: {
     icon: <MdWifiOff size={36} />,
-    title: 'Connection lost',
-    description: 'Please check your internet connection and try again.',
-    iconColor: 'orange.400',
-    iconBg: 'orange.50',
+    title: "Connection lost",
+    description: "Please check your internet connection and try again.",
+    iconColor: "orange.400",
+    iconBg: "orange.50",
   },
   notFound: {
     icon: <MdSearchOff size={36} />,
-    title: 'Not found',
-    description: 'The resource you are looking for does not exist or has been removed.',
-    iconColor: 'gray.400',
-    iconBg: 'gray.100',
+    title: "Not found",
+    description:
+      "The resource you are looking for does not exist or has been removed.",
+    iconColor: "gray.400",
+    iconBg: "gray.100",
   },
   forbidden: {
     icon: <MdBlock size={36} />,
-    title: 'Access denied',
-    description: 'You do not have permission to view this resource.',
-    iconColor: 'red.400',
-    iconBg: 'red.50',
+    title: "Access denied",
+    description: "You do not have permission to view this resource.",
+    iconColor: "red.400",
+    iconBg: "red.50",
   },
   server: {
     icon: <MdCloudOff size={36} />,
-    title: 'Server error',
-    description: 'Our servers are having trouble right now. Please try again shortly.',
-    iconColor: 'orange.400',
-    iconBg: 'orange.50',
+    title: "Server error",
+    description:
+      "Our servers are having trouble right now. Please try again shortly.",
+    iconColor: "orange.400",
+    iconBg: "orange.50",
   },
-}
+};
 
 /**
  * Reusable error-state screen for failed API calls, 404s, permission issues, etc.
@@ -74,7 +76,7 @@ const ERROR_PRESETS = {
  * @param {ReactNode}   [props.children]        - Extra content below buttons.
  */
 export default function ErrorState({
-  preset = 'generic',
+  preset = "generic",
   icon,
   iconSize = 36,
   iconColor,
@@ -83,9 +85,9 @@ export default function ErrorState({
   description,
   errorMessage,
   statusCode,
-  retryLabel = 'Try Again',
+  retryLabel = "Try Again",
   onRetry,
-  homeLabel = 'Go Home',
+  homeLabel = "Go Home",
   onHome,
   actionLabel,
   onAction,
@@ -94,13 +96,13 @@ export default function ErrorState({
   py = 12,
   children,
 }) {
-  const base = ERROR_PRESETS[preset] || ERROR_PRESETS.generic
+  const base = ERROR_PRESETS[preset] || ERROR_PRESETS.generic;
 
-  const resolvedIcon = icon || base.icon
-  const resolvedIconColor = iconColor || base.iconColor
-  const resolvedIconBg = iconBg || base.iconBg
-  const resolvedTitle = title || base.title
-  const resolvedDescription = description || base.description
+  const resolvedIcon = icon || base.icon;
+  const resolvedIconColor = iconColor || base.iconColor;
+  const resolvedIconBg = iconBg || base.iconBg;
+  const resolvedTitle = title || base.title;
+  const resolvedDescription = description || base.description;
 
   const content = (
     <Flex
@@ -109,7 +111,7 @@ export default function ErrorState({
       justify="center"
       py={py}
       gap={3}
-      {...(fullScreen && { minH: '100vh', px: 6 })}
+      {...(fullScreen && { minH: "100vh", px: 6 })}
     >
       <Flex
         align="center"
@@ -162,12 +164,22 @@ export default function ErrorState({
           </Button>
         )}
         {onHome && (
-          <Button size="sm" variant="outline" colorPalette="teal" onClick={onHome}>
+          <Button
+            size="sm"
+            variant="outline"
+            colorPalette="teal"
+            onClick={onHome}
+          >
             <MdHome /> {homeLabel}
           </Button>
         )}
         {actionLabel && onAction && (
-          <Button size="sm" variant="ghost" colorPalette="teal" onClick={onAction}>
+          <Button
+            size="sm"
+            variant="ghost"
+            colorPalette="teal"
+            onClick={onAction}
+          >
             {actionLabel}
           </Button>
         )}
@@ -175,13 +187,13 @@ export default function ErrorState({
 
       {children}
     </Flex>
-  )
+  );
 
-  if (fullScreen || !withCard) return content
+  if (fullScreen || !withCard) return content;
 
   return (
     <Card.Root shadow="sm" rounded="xl">
       <Card.Body>{content}</Card.Body>
     </Card.Root>
-  )
+  );
 }

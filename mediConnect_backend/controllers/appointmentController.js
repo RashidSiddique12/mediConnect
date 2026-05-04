@@ -1,26 +1,51 @@
-const Appointment = require('../models/Appointment');
-const Hospital = require('../models/Hospital');
-const { success, created, paginated } = require('../utils/apiResponse');
+const Appointment = require("../models/Appointment");
+const Hospital = require("../models/Hospital");
+const Doctor = require("../models/Doctor");
+const User = require("../models/User");
+const { success, created, paginated } = require("../utils/apiResponse");
 
 // GET /api/v1/appointments
 const getAppointments = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, limit = 10, status, search } = req.query;
     const query = {};
-    if (status) query.status = status;
+    if (status) {
+      const statuses = status.split(",");
+      query.status = statuses.length > 1 ? { $in: statuses } : status;
+    }
 
     // Auto-filter by hospital for hospital_admin
-    if (req.user.role === 'hospital_admin') {
-      const hospital = await Hospital.findOne({ hospitalAdminId: req.user._id });
+    if (req.user.role === "hospital_admin") {
+      const hospital = await Hospital.findOne({
+        hospitalAdminId: req.user._id,
+      });
       if (hospital) query.hospitalId = hospital._id;
+    }
+
+    // Auto-filter by patient for patient role
+    if (req.user.role === "patient") {
+      query.patientId = req.user._id;
+    }
+
+    // Text search on patient/doctor names
+    if (search) {
+      const regex = new RegExp(search, "i");
+      const [matchingPatients, matchingDoctors] = await Promise.all([
+        User.find({ name: regex }).select("_id").lean(),
+        Doctor.find({ name: regex }).select("_id").lean(),
+      ]);
+      query.$or = [
+        { patientId: { $in: matchingPatients.map((p) => p._id) } },
+        { doctorId: { $in: matchingDoctors.map((d) => d._id) } },
+      ];
     }
 
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const total = await Appointment.countDocuments(query);
     const appointments = await Appointment.find(query)
-      .populate('patientId', 'name email phone')
-      .populate('hospitalId', 'name')
-      .populate('doctorId', 'name specialtyId')
+      .populate("patientId", "name email phone")
+      .populate("hospitalId", "name")
+      .populate("doctorId", "name specialtyId")
       .sort({ appointmentDate: -1 })
       .skip(skip)
       .limit(parseInt(limit, 10));
@@ -40,12 +65,14 @@ const getAppointments = async (req, res, next) => {
 const getAppointmentById = async (req, res, next) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
-      .populate('patientId', 'name email phone')
-      .populate('hospitalId', 'name address phone')
-      .populate('doctorId', 'name specialtyIds consultationFee');
+      .populate("patientId", "name email phone")
+      .populate("hospitalId", "name address phone")
+      .populate("doctorId", "name specialtyIds consultationFee");
 
     if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found." });
     }
 
     success(res, appointment);
@@ -57,18 +84,21 @@ const getAppointmentById = async (req, res, next) => {
 // POST /api/v1/appointments
 const createAppointment = async (req, res, next) => {
   try {
-    const { doctorId, hospitalId, appointmentDate, timeSlot, reason } = req.body;
+    const { doctorId, hospitalId, appointmentDate, timeSlot, reason } =
+      req.body;
 
     // Check for double booking
     const existing = await Appointment.findOne({
       doctorId,
       appointmentDate: new Date(appointmentDate),
       timeSlot,
-      status: { $ne: 'cancelled' },
+      status: { $ne: "cancelled" },
     });
 
     if (existing) {
-      return res.status(409).json({ success: false, message: 'This time slot is already booked.' });
+      return res
+        .status(409)
+        .json({ success: false, message: "This time slot is already booked." });
     }
 
     const appointment = await Appointment.create({
@@ -81,11 +111,11 @@ const createAppointment = async (req, res, next) => {
     });
 
     const populated = await Appointment.findById(appointment._id)
-      .populate('patientId', 'name email phone')
-      .populate('hospitalId', 'name')
-      .populate('doctorId', 'name');
+      .populate("patientId", "name email phone")
+      .populate("hospitalId", "name")
+      .populate("doctorId", "name");
 
-    created(res, populated, 'Appointment booked successfully');
+    created(res, populated, "Appointment booked successfully");
   } catch (error) {
     next(error);
   }
@@ -96,7 +126,9 @@ const updateAppointment = async (req, res, next) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found." });
     }
 
     const { status, notes } = req.body;
@@ -105,11 +137,11 @@ const updateAppointment = async (req, res, next) => {
     await appointment.save();
 
     const updated = await Appointment.findById(appointment._id)
-      .populate('patientId', 'name email phone')
-      .populate('hospitalId', 'name')
-      .populate('doctorId', 'name');
+      .populate("patientId", "name email phone")
+      .populate("hospitalId", "name")
+      .populate("doctorId", "name");
 
-    success(res, updated, 'Appointment updated successfully');
+    success(res, updated, "Appointment updated successfully");
   } catch (error) {
     next(error);
   }
@@ -120,26 +152,40 @@ const cancelAppointment = async (req, res, next) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found." });
     }
 
-    if (appointment.status === 'cancelled') {
-      return res.status(400).json({ success: false, message: 'Appointment already cancelled.' });
+    if (appointment.status === "cancelled") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Appointment already cancelled." });
     }
 
-    if (appointment.status === 'completed') {
-      return res.status(400).json({ success: false, message: 'Cannot cancel a completed appointment.' });
+    if (appointment.status === "completed") {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Cannot cancel a completed appointment.",
+        });
     }
 
     // Patient can only cancel their own appointments
-    if (req.user.role === 'patient' && String(appointment.patientId) !== String(req.user._id)) {
-      return res.status(403).json({ success: false, message: 'Access denied.' });
+    if (
+      req.user.role === "patient" &&
+      String(appointment.patientId) !== String(req.user._id)
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied." });
     }
 
-    appointment.status = 'cancelled';
+    appointment.status = "cancelled";
     await appointment.save();
 
-    success(res, appointment, 'Appointment cancelled successfully');
+    success(res, appointment, "Appointment cancelled successfully");
   } catch (error) {
     next(error);
   }
@@ -148,15 +194,31 @@ const cancelAppointment = async (req, res, next) => {
 // GET /api/v1/patients/:patientId/appointments
 const getAppointmentsByPatient = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, limit = 10, status, search } = req.query;
     const query = { patientId: req.params.patientId };
-    if (status) query.status = status;
+    if (status) {
+      const statuses = status.split(",");
+      query.status = statuses.length > 1 ? { $in: statuses } : status;
+    }
+
+    // Text search on doctor/hospital names
+    if (search) {
+      const regex = new RegExp(search, "i");
+      const [matchingDoctors, matchingHospitals] = await Promise.all([
+        Doctor.find({ name: regex }).select("_id").lean(),
+        Hospital.find({ name: regex }).select("_id").lean(),
+      ]);
+      query.$or = [
+        { doctorId: { $in: matchingDoctors.map((d) => d._id) } },
+        { hospitalId: { $in: matchingHospitals.map((h) => h._id) } },
+      ];
+    }
 
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const total = await Appointment.countDocuments(query);
     const appointments = await Appointment.find(query)
-      .populate('hospitalId', 'name')
-      .populate('doctorId', 'name specialtyId')
+      .populate("hospitalId", "name")
+      .populate("doctorId", "name specialtyId")
       .sort({ appointmentDate: -1 })
       .skip(skip)
       .limit(parseInt(limit, 10));
@@ -182,8 +244,8 @@ const getAppointmentsByDoctor = async (req, res, next) => {
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const total = await Appointment.countDocuments(query);
     const appointments = await Appointment.find(query)
-      .populate('patientId', 'name email phone')
-      .populate('hospitalId', 'name')
+      .populate("patientId", "name email phone")
+      .populate("hospitalId", "name")
       .sort({ appointmentDate: -1 })
       .skip(skip)
       .limit(parseInt(limit, 10));

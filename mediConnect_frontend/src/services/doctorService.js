@@ -1,6 +1,5 @@
-
-import api from './api';
-import { DOCTOR_ENDPOINTS } from '../constants/apiEndpoints';
+import api from "./api";
+import { DOCTOR_ENDPOINTS } from "../constants/apiEndpoints";
 
 export const doctorService = {
   getAll: async (params = {}) => {

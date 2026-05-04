@@ -1,17 +1,19 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
-const validate = require('../middleware/validate');
-const { appointmentValidator } = require('../validators/appointmentValidator');
+const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/roleCheck");
+const validate = require("../middleware/validate");
+const { appointmentValidator } = require("../validators/appointmentValidator");
 const {
   getAppointments,
   getAppointmentById,
   createAppointment,
   updateAppointment,
   cancelAppointment,
-} = require('../controllers/appointmentController');
-const { getPrescriptionByAppointment } = require('../controllers/prescriptionController');
+} = require("../controllers/appointmentController");
+const {
+  getPrescriptionByAppointment,
+} = require("../controllers/prescriptionController");
 
 /**
  * @swagger
@@ -41,7 +43,7 @@ const { getPrescriptionByAppointment } = require('../controllers/prescriptionCon
  *       200:
  *         description: Paginated list of appointments
  */
-router.get('/', auth, getAppointments);
+router.get("/", auth, getAppointments);
 
 /**
  * @swagger
@@ -63,7 +65,7 @@ router.get('/', auth, getAppointments);
  *       404:
  *         description: Appointment not found
  */
-router.get('/:id', auth, getAppointmentById);
+router.get("/:id", auth, getAppointmentById);
 
 /**
  * @swagger
@@ -101,7 +103,14 @@ router.get('/:id', auth, getAppointmentById);
  *       409:
  *         description: Time slot already booked
  */
-router.post('/', auth, roleCheck('patient'), appointmentValidator, validate, createAppointment);
+router.post(
+  "/",
+  auth,
+  roleCheck("patient"),
+  appointmentValidator,
+  validate,
+  createAppointment,
+);
 
 /**
  * @swagger
@@ -135,7 +144,12 @@ router.post('/', auth, roleCheck('patient'), appointmentValidator, validate, cre
  *       404:
  *         description: Appointment not found
  */
-router.put('/:id', auth, roleCheck('hospital_admin', 'super_admin'), updateAppointment);
+router.put(
+  "/:id",
+  auth,
+  roleCheck("hospital_admin", "super_admin"),
+  updateAppointment,
+);
 
 /**
  * @swagger
@@ -159,7 +173,7 @@ router.put('/:id', auth, roleCheck('hospital_admin', 'super_admin'), updateAppoi
  *       403:
  *         description: Patients can only cancel own appointments
  */
-router.patch('/:id/cancel', auth, cancelAppointment);
+router.patch("/:id/cancel", auth, cancelAppointment);
 
 /**
  * @swagger
@@ -181,6 +195,6 @@ router.patch('/:id/cancel', auth, cancelAppointment);
  *       404:
  *         description: Prescription not found
  */
-router.get('/:appointmentId/prescription', auth, getPrescriptionByAppointment);
+router.get("/:appointmentId/prescription", auth, getPrescriptionByAppointment);
 
 module.exports = router;

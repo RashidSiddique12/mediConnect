@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const specialtySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Specialty name is required'],
+      required: [true, "Specialty name is required"],
       unique: true,
       trim: true,
       maxlength: 100,
@@ -15,11 +15,11 @@ const specialtySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'active',
+      enum: ["active", "inactive"],
+      default: "active",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-module.exports = mongoose.model('Specialty', specialtySchema);
+module.exports = mongoose.model("Specialty", specialtySchema);

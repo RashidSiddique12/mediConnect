@@ -1,6 +1,6 @@
-import { Box, Flex, Heading, Text, Button } from '@chakra-ui/react'
-import { MdArrowBack } from 'react-icons/md'
-import { useNavigate } from 'react-router-dom'
+import { Box, Flex, Heading, Text, Button } from "@chakra-ui/react";
+import { MdArrowBack } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Reusable page header with title, subtitle, back navigation, and action buttons.
@@ -16,15 +16,15 @@ export default function PageHeader({
   title,
   subtitle,
   backTo,
-  backLabel = 'Back',
+  backLabel = "Back",
   actions,
   children,
 }) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <Flex
-      align={{ base: 'flex-start', sm: 'center' }}
+      align={{ base: "flex-start", sm: "center" }}
       justify="space-between"
       wrap="wrap"
       gap={3}
@@ -55,5 +55,5 @@ export default function PageHeader({
       {actions && <Flex gap={2}>{actions}</Flex>}
       {children}
     </Flex>
-  )
+  );
 }

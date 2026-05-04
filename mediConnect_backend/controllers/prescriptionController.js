@@ -1,17 +1,31 @@
-const Prescription = require('../models/Prescription');
-const Appointment = require('../models/Appointment');
-const { success, created, paginated } = require('../utils/apiResponse');
+const Prescription = require("../models/Prescription");
+const Appointment = require("../models/Appointment");
+const Doctor = require("../models/Doctor");
+const { success, created, paginated } = require("../utils/apiResponse");
 
 // GET /api/v1/prescriptions
 const getPrescriptions = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search } = req.query;
+    const query = {};
+
+    if (search) {
+      const regex = new RegExp(search, "i");
+      const matchingDoctors = await Doctor.find({ name: regex })
+        .select("_id")
+        .lean();
+      query.$or = [
+        { diagnosis: regex },
+        { doctorId: { $in: matchingDoctors.map((d) => d._id) } },
+      ];
+    }
+
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-    const total = await Prescription.countDocuments();
-    const prescriptions = await Prescription.find()
-      .populate('appointmentId')
-      .populate('doctorId', 'name')
-      .populate('patientId', 'name email')
+    const total = await Prescription.countDocuments(query);
+    const prescriptions = await Prescription.find(query)
+      .populate("appointmentId")
+      .populate("doctorId", "name")
+      .populate("patientId", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit, 10));
@@ -31,12 +45,14 @@ const getPrescriptions = async (req, res, next) => {
 const getPrescriptionById = async (req, res, next) => {
   try {
     const prescription = await Prescription.findById(req.params.id)
-      .populate('appointmentId')
-      .populate('doctorId', 'name')
-      .populate('patientId', 'name email');
+      .populate("appointmentId")
+      .populate("doctorId", "name")
+      .populate("patientId", "name email");
 
     if (!prescription) {
-      return res.status(404).json({ success: false, message: 'Prescription not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Prescription not found." });
     }
     success(res, prescription);
   } catch (error) {
@@ -48,14 +64,18 @@ const getPrescriptionById = async (req, res, next) => {
 const uploadPrescription = async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'Prescription file is required.' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Prescription file is required." });
     }
 
     const { appointmentId, notes } = req.body;
 
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found." });
     }
 
     const fileUrl = `/uploads/prescriptions/${req.file.filename}`;
@@ -69,11 +89,11 @@ const uploadPrescription = async (req, res, next) => {
     });
 
     const populated = await Prescription.findById(prescription._id)
-      .populate('appointmentId')
-      .populate('doctorId', 'name')
-      .populate('patientId', 'name email');
+      .populate("appointmentId")
+      .populate("doctorId", "name")
+      .populate("patientId", "name email");
 
-    created(res, populated, 'Prescription uploaded successfully');
+    created(res, populated, "Prescription uploaded successfully");
   } catch (error) {
     next(error);
   }
@@ -82,12 +102,16 @@ const uploadPrescription = async (req, res, next) => {
 // GET /api/v1/appointments/:appointmentId/prescription
 const getPrescriptionByAppointment = async (req, res, next) => {
   try {
-    const prescription = await Prescription.findOne({ appointmentId: req.params.appointmentId })
-      .populate('doctorId', 'name')
-      .populate('patientId', 'name email');
+    const prescription = await Prescription.findOne({
+      appointmentId: req.params.appointmentId,
+    })
+      .populate("doctorId", "name")
+      .populate("patientId", "name email");
 
     if (!prescription) {
-      return res.status(404).json({ success: false, message: 'Prescription not found.' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Prescription not found." });
     }
     success(res, prescription);
   } catch (error) {
@@ -98,12 +122,35 @@ const getPrescriptionByAppointment = async (req, res, next) => {
 // GET /api/v1/patients/:patientId/prescriptions
 const getPrescriptionsByPatient = async (req, res, next) => {
   try {
-    const prescriptions = await Prescription.find({ patientId: req.params.patientId })
-      .populate('appointmentId')
-      .populate('doctorId', 'name')
-      .sort({ createdAt: -1 });
+    const { page = 1, limit = 10, search } = req.query;
+    const query = { patientId: req.params.patientId };
 
-    success(res, prescriptions);
+    if (search) {
+      const regex = new RegExp(search, "i");
+      const matchingDoctors = await Doctor.find({ name: regex })
+        .select("_id")
+        .lean();
+      query.$or = [
+        { diagnosis: regex },
+        { doctorId: { $in: matchingDoctors.map((d) => d._id) } },
+      ];
+    }
+
+    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const total = await Prescription.countDocuments(query);
+    const prescriptions = await Prescription.find(query)
+      .populate("appointmentId")
+      .populate("doctorId", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit, 10));
+
+    paginated(res, prescriptions, {
+      total,
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      totalPages: Math.ceil(total / parseInt(limit, 10)),
+    });
   } catch (error) {
     next(error);
   }

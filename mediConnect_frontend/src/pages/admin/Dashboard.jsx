@@ -74,19 +74,34 @@ function StatusDistributionBar({ appointments }) {
     count,
     pct: Math.round((count / total) * 100),
   }));
-  const colorMap = { confirmed: "#38A169", pending: "#DD6B20", completed: "#0b9c9c", cancelled: "#E53E3E" };
+  const colorMap = {
+    confirmed: "#38A169",
+    pending: "#DD6B20",
+    completed: "#0b9c9c",
+    cancelled: "#E53E3E",
+  };
 
   return (
     <Box>
       <Flex h="8px" rounded="full" overflow="hidden" bg="gray.100">
         {segments.map(({ status, pct }) => (
-          <Box key={status} w={`${pct}%`} bg={colorMap[status] || "gray.300"} transition="width 0.4s" />
+          <Box
+            key={status}
+            w={`${pct}%`}
+            bg={colorMap[status] || "gray.300"}
+            transition="width 0.4s"
+          />
         ))}
       </Flex>
       <Flex mt={2} gap={4} wrap="wrap">
         {segments.map(({ status, count, pct }) => (
           <Flex key={status} align="center" gap={1.5}>
-            <Box w="8px" h="8px" rounded="full" bg={colorMap[status] || "gray.300"} />
+            <Box
+              w="8px"
+              h="8px"
+              rounded="full"
+              bg={colorMap[status] || "gray.300"}
+            />
             <Text fontSize="xs" color="gray.500" textTransform="capitalize">
               {status} {count} ({pct}%)
             </Text>
@@ -102,7 +117,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { data, loading } = useSelector((s) => s.dashboard);
   const user = useSelector((s) => s.auth.user);
-  console.log({data});
+  console.log({ data });
 
   useEffect(() => {
     dispatch(dashboardSlice.fetchDashboardRequest());
@@ -118,10 +133,10 @@ export default function AdminDashboard() {
   const stats = data?.stats || {};
   const appointments = data?.recentAppointments || [];
   const hospitals = data?.hospitals || [];
-  
+
   const STAT_CARDS = [
     {
-      label: "Total Hospitals fsfsdf",
+      label: "Total Hospitals",
       value: stats.totalHospitals ?? 0,
       icon: MdLocalHospital,
       color: "teal",
@@ -302,7 +317,10 @@ export default function AdminDashboard() {
           <Card.Body pt={0}>
             {hospitals.length === 0 ? (
               <Box textAlign="center" py={8} color="gray.400">
-                <MdLocalHospital size={36} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                <MdLocalHospital
+                  size={36}
+                  style={{ margin: "0 auto 8px", opacity: 0.5 }}
+                />
                 <Text fontSize="sm">No hospitals registered yet</Text>
                 <Button
                   size="sm"
@@ -351,7 +369,14 @@ export default function AdminDashboard() {
                           {h.totalDoctors}
                         </Text>
                       </Box>
-                      <Flex align="center" gap={1} bg="orange.50" px={2} py={1} rounded="md">
+                      <Flex
+                        align="center"
+                        gap={1}
+                        bg="orange.50"
+                        px={2}
+                        py={1}
+                        rounded="md"
+                      >
                         <MdStar color="#F6AD55" size={12} />
                         <Text fontWeight="700" fontSize="xs" color="orange.500">
                           {h.rating}
@@ -383,7 +408,10 @@ export default function AdminDashboard() {
           <Card.Body pt={0}>
             {appointments.length === 0 ? (
               <Box textAlign="center" py={8} color="gray.400">
-                <MdEventNote size={36} style={{ margin: "0 auto 8px", opacity: 0.5 }} />
+                <MdEventNote
+                  size={36}
+                  style={{ margin: "0 auto 8px", opacity: 0.5 }}
+                />
                 <Text fontSize="sm">No recent appointments</Text>
               </Box>
             ) : (
@@ -398,7 +426,9 @@ export default function AdminDashboard() {
                         <Table.ColumnHeader>Patient</Table.ColumnHeader>
                         <Table.ColumnHeader>Doctor</Table.ColumnHeader>
                         <Table.ColumnHeader>Date</Table.ColumnHeader>
-                        <Table.ColumnHeader textAlign="right">Status</Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign="right">
+                          Status
+                        </Table.ColumnHeader>
                       </Table.Row>
                     </Table.Header>
                     <Table.Body>
@@ -409,16 +439,23 @@ export default function AdminDashboard() {
                             <Table.Cell>
                               <Flex align="center" gap={2}>
                                 <Avatar.Root size="xs" bg="purple.100">
-                                  <Avatar.Fallback color="purple.600" name={a.patientName} />
+                                  <Avatar.Fallback
+                                    color="purple.600"
+                                    name={a.patientName}
+                                  />
                                 </Avatar.Root>
                                 <Text fontSize="sm">{a.patientName}</Text>
                               </Flex>
                             </Table.Cell>
                             <Table.Cell>
-                              <Text fontSize="sm" color="gray.600">{a.doctorName}</Text>
+                              <Text fontSize="sm" color="gray.600">
+                                {a.doctorName}
+                              </Text>
                             </Table.Cell>
                             <Table.Cell>
-                              <Text fontSize="sm" color="gray.500">{a.date}</Text>
+                              <Text fontSize="sm" color="gray.500">
+                                {a.date}
+                              </Text>
                             </Table.Cell>
                             <Table.Cell textAlign="right">
                               <Badge
@@ -457,13 +494,24 @@ export default function AdminDashboard() {
               rounded="xl"
               cursor="pointer"
               onClick={() => navigate(path)}
-              _hover={{ shadow: "md", transform: "translateY(-2px)", borderColor: `${color}.300` }}
+              _hover={{
+                shadow: "md",
+                transform: "translateY(-2px)",
+                borderColor: `${color}.300`,
+              }}
               transition="all 0.2s"
               borderWidth="1px"
               borderColor="gray.100"
             >
               <Card.Body>
-                <Box color={`${color}.500`} bg={`${color}.50`} p={2.5} rounded="xl" w="fit-content" mb={3}>
+                <Box
+                  color={`${color}.500`}
+                  bg={`${color}.50`}
+                  p={2.5}
+                  rounded="xl"
+                  w="fit-content"
+                  mb={3}
+                >
                   <Icon size={20} />
                 </Box>
                 <Text fontWeight="700" fontSize="sm" color="gray.800" mb={0.5}>
@@ -472,7 +520,14 @@ export default function AdminDashboard() {
                 <Text fontSize="xs" color="gray.500">
                   {desc}
                 </Text>
-                <Flex align="center" gap={1} mt={3} color={`${color}.500`} fontSize="xs" fontWeight="600">
+                <Flex
+                  align="center"
+                  gap={1}
+                  mt={3}
+                  color={`${color}.500`}
+                  fontSize="xs"
+                  fontWeight="600"
+                >
                   Go to {label} <MdArrowForward size={14} />
                 </Flex>
               </Card.Body>

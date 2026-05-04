@@ -41,11 +41,9 @@ import {
   selectCurrentHospital,
   selectHospitalsLoading,
 } from "@/features/hospitals/hospitalSelectors";
-import { selectDashboardData } from "@/features/dashboard/dashboardSelectors";
 import { fetchSpecialtiesRequest } from "@/features/specialties/specialtySlice";
 import { selectSpecialties } from "@/features/specialties/specialtySelectors";
 import { HOSPITAL_TYPES, FACILITY_OPTIONS } from "@/constants/common";
-
 
 function SectionCard({ icon: Icon, title, children }) {
   return (
@@ -123,12 +121,11 @@ export default function HospitalProfile() {
   const dispatch = useDispatch();
   const hospital = useSelector(selectCurrentHospital);
   const loading = useSelector(selectHospitalsLoading);
-  const dashboardData = useSelector(selectDashboardData);
   const allSpecialties = useSelector(selectSpecialties);
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const hospitalId = dashboardData?.hospital?._id;
+  const hospitalId = hospital?._id;
 
   const [form, setForm] = useState({
     name: "",
@@ -152,10 +149,9 @@ export default function HospitalProfile() {
   });
 
   useEffect(() => {
-    if (hospitalId)
-      dispatch(hospitalSlice.fetchHospitalByIdRequest(hospitalId));
+    dispatch(hospitalSlice.fetchMyHospitalRequest());
     dispatch(fetchSpecialtiesRequest());
-  }, [dispatch, hospitalId]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (hospital) {

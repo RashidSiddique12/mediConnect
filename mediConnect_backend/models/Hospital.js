@@ -1,32 +1,32 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const hospitalSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Hospital name is required'],
+      required: [true, "Hospital name is required"],
       trim: true,
       maxlength: 200,
     },
     type: {
       type: String,
-      enum: ['general', 'specialty', 'clinic', 'diagnostic_center'],
-      default: 'general',
+      enum: ["general", "specialty", "clinic", "diagnostic_center"],
+      default: "general",
     },
     address: {
       street: { type: String, trim: true },
-      city: { type: String, required: [true, 'City is required'], trim: true },
+      city: { type: String, required: [true, "City is required"], trim: true },
       state: { type: String, trim: true },
       zipCode: { type: String, trim: true },
     },
     phone: {
       type: String,
-      required: [true, 'Phone is required'],
+      required: [true, "Phone is required"],
       trim: true,
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, "Email is required"],
       lowercase: true,
       trim: true,
       unique: true,
@@ -45,18 +45,18 @@ const hospitalSchema = new mongoose.Schema(
     },
     hospitalAdminId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
     specialties: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Specialty',
+        ref: "Specialty",
       },
     ],
     status: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'active',
+      enum: ["active", "inactive"],
+      default: "active",
     },
     isVerified: {
       type: Boolean,
@@ -74,16 +74,20 @@ const hospitalSchema = new mongoose.Schema(
       close: { type: String, trim: true },
       is24x7: { type: Boolean, default: false },
     },
-    facilities: [{
-      type: String,
-      trim: true,
-    }],
-    insurancePanels: [{
-      type: String,
-      trim: true,
-    }],
+    facilities: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    insurancePanels: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-module.exports = mongoose.model('Hospital', hospitalSchema);
+module.exports = mongoose.model("Hospital", hospitalSchema);

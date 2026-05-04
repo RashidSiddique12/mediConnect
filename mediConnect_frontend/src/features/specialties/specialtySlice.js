@@ -1,53 +1,53 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   list: [],
   loading: false,
   error: null,
-}
+};
 
 const specialtySlice = createSlice({
-  name: 'specialties',
+  name: "specialties",
   initialState,
   reducers: {
     fetchSpecialtiesRequest(state) {
-      state.loading = true
-      state.error = null
+      state.loading = true;
+      state.error = null;
     },
     fetchSpecialtiesSuccess(state, action) {
-      state.loading = false
-      state.list = action.payload
+      state.loading = false;
+      state.list = action.payload;
     },
     fetchSpecialtiesFailure(state, action) {
-      state.loading = false
-      state.error = action.payload
+      state.loading = false;
+      state.error = action.payload;
     },
     addSpecialtyRequest(state) {
-      state.error = null
+      state.error = null;
     },
     addSpecialtySuccess(state, action) {
-      state.list.unshift(action.payload)
+      state.list.unshift(action.payload);
     },
     addSpecialtyFailure(state, action) {
-      state.error = action.payload
+      state.error = action.payload;
     },
     updateSpecialtyRequest() {},
     updateSpecialtySuccess(state, action) {
-      const updated = action.payload
-      state.list = state.list.map((s) => (s._id === updated._id ? updated : s))
+      const updated = action.payload;
+      state.list = state.list.map((s) => (s._id === updated._id ? updated : s));
     },
     updateSpecialtyFailure(state, action) {
-      state.error = action.payload
+      state.error = action.payload;
     },
     deleteSpecialtyRequest() {},
     deleteSpecialtySuccess(state, action) {
-      state.list = state.list.filter((s) => s._id !== action.payload)
+      state.list = state.list.filter((s) => s._id !== action.payload);
     },
     deleteSpecialtyFailure(state, action) {
-      state.error = action.payload
+      state.error = action.payload;
     },
   },
-})
+});
 
 const {
   fetchSpecialtiesRequest,
@@ -62,9 +62,9 @@ const {
   deleteSpecialtyRequest,
   deleteSpecialtySuccess,
   deleteSpecialtyFailure,
-} = specialtySlice.actions
+} = specialtySlice.actions;
 
-const specialtyReducer = specialtySlice.reducer
+const specialtyReducer = specialtySlice.reducer;
 
 export {
   fetchSpecialtiesRequest,
@@ -80,4 +80,4 @@ export {
   deleteSpecialtySuccess,
   deleteSpecialtyFailure,
   specialtyReducer,
-}
+};

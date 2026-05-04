@@ -1,9 +1,9 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
-const validate = require('../middleware/validate');
-const { reviewValidator } = require('../validators/reviewValidator');
+const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/roleCheck");
+const validate = require("../middleware/validate");
+const { reviewValidator } = require("../validators/reviewValidator");
 const {
   getReviews,
   createReview,
@@ -11,7 +11,7 @@ const {
   deleteReview,
   approveReview,
   rejectReview,
-} = require('../controllers/reviewController');
+} = require("../controllers/reviewController");
 
 /**
  * @swagger
@@ -39,7 +39,7 @@ const {
  *       200:
  *         description: Paginated list of reviews
  */
-router.get('/', getReviews);
+router.get("/", getReviews);
 
 /**
  * @swagger
@@ -73,7 +73,14 @@ router.get('/', getReviews);
  *       201:
  *         description: Review submitted (status = pending)
  */
-router.post('/', auth, roleCheck('patient'), reviewValidator, validate, createReview);
+router.post(
+  "/",
+  auth,
+  roleCheck("patient"),
+  reviewValidator,
+  validate,
+  createReview,
+);
 
 /**
  * @swagger
@@ -107,7 +114,7 @@ router.post('/', auth, roleCheck('patient'), reviewValidator, validate, createRe
  *       404:
  *         description: Review not found
  */
-router.put('/:id', auth, updateReview);
+router.put("/:id", auth, updateReview);
 
 /**
  * @swagger
@@ -129,7 +136,7 @@ router.put('/:id', auth, updateReview);
  *       404:
  *         description: Review not found
  */
-router.delete('/:id', auth, deleteReview);
+router.delete("/:id", auth, deleteReview);
 
 /**
  * @swagger
@@ -151,7 +158,7 @@ router.delete('/:id', auth, deleteReview);
  *       404:
  *         description: Review not found
  */
-router.patch('/:id/approve', auth, roleCheck('super_admin'), approveReview);
+router.patch("/:id/approve", auth, roleCheck("super_admin"), approveReview);
 
 /**
  * @swagger
@@ -173,6 +180,6 @@ router.patch('/:id/approve', auth, roleCheck('super_admin'), approveReview);
  *       404:
  *         description: Review not found
  */
-router.patch('/:id/reject', auth, roleCheck('super_admin'), rejectReview);
+router.patch("/:id/reject", auth, roleCheck("super_admin"), rejectReview);
 
 module.exports = router;

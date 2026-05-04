@@ -1,13 +1,13 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
-const upload = require('../middleware/upload');
+const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/roleCheck");
+const upload = require("../middleware/upload");
 const {
   getPrescriptions,
   getPrescriptionById,
   uploadPrescription,
-} = require('../controllers/prescriptionController');
+} = require("../controllers/prescriptionController");
 
 /**
  * @swagger
@@ -32,7 +32,7 @@ const {
  *       200:
  *         description: Paginated list of prescriptions
  */
-router.get('/', auth, getPrescriptions);
+router.get("/", auth, getPrescriptions);
 
 /**
  * @swagger
@@ -54,7 +54,7 @@ router.get('/', auth, getPrescriptions);
  *       404:
  *         description: Prescription not found
  */
-router.get('/:id', auth, getPrescriptionById);
+router.get("/:id", auth, getPrescriptionById);
 
 /**
  * @swagger
@@ -89,11 +89,11 @@ router.get('/:id', auth, getPrescriptionById);
  *         description: Appointment not found
  */
 router.post(
-  '/upload',
+  "/upload",
   auth,
-  roleCheck('hospital_admin'),
-  upload.single('file'),
-  uploadPrescription
+  roleCheck("hospital_admin"),
+  upload.single("file"),
+  uploadPrescription,
 );
 
 module.exports = router;

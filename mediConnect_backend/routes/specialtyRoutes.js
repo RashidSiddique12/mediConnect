@@ -1,17 +1,17 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth');
-const roleCheck = require('../middleware/roleCheck');
-const validate = require('../middleware/validate');
-const { specialtyValidator } = require('../validators/specialtyValidator');
+const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/roleCheck");
+const validate = require("../middleware/validate");
+const { specialtyValidator } = require("../validators/specialtyValidator");
 const {
   getSpecialties,
   getSpecialtyById,
   createSpecialty,
   updateSpecialty,
   deleteSpecialty,
-} = require('../controllers/specialtyController');
-const { getDoctorsBySpecialty } = require('../controllers/doctorController');
+} = require("../controllers/specialtyController");
+const { getDoctorsBySpecialty } = require("../controllers/doctorController");
 
 /**
  * @swagger
@@ -29,7 +29,7 @@ const { getDoctorsBySpecialty } = require('../controllers/doctorController');
  *       200:
  *         description: List of specialties
  */
-router.get('/', getSpecialties);
+router.get("/", getSpecialties);
 
 /**
  * @swagger
@@ -49,7 +49,7 @@ router.get('/', getSpecialties);
  *       404:
  *         description: Specialty not found
  */
-router.get('/:id', getSpecialtyById);
+router.get("/:id", getSpecialtyById);
 
 /**
  * @swagger
@@ -67,7 +67,7 @@ router.get('/:id', getSpecialtyById);
  *       200:
  *         description: List of doctors
  */
-router.get('/:specialtyId/doctors', getDoctorsBySpecialty);
+router.get("/:specialtyId/doctors", getDoctorsBySpecialty);
 
 /**
  * @swagger
@@ -97,7 +97,14 @@ router.get('/:specialtyId/doctors', getDoctorsBySpecialty);
  *       409:
  *         description: Specialty name already exists
  */
-router.post('/', auth, roleCheck('super_admin'), specialtyValidator, validate, createSpecialty);
+router.post(
+  "/",
+  auth,
+  roleCheck("super_admin"),
+  specialtyValidator,
+  validate,
+  createSpecialty,
+);
 
 /**
  * @swagger
@@ -130,7 +137,14 @@ router.post('/', auth, roleCheck('super_admin'), specialtyValidator, validate, c
  *       404:
  *         description: Specialty not found
  */
-router.put('/:id', auth, roleCheck('super_admin'), specialtyValidator, validate, updateSpecialty);
+router.put(
+  "/:id",
+  auth,
+  roleCheck("super_admin"),
+  specialtyValidator,
+  validate,
+  updateSpecialty,
+);
 
 /**
  * @swagger
@@ -152,6 +166,6 @@ router.put('/:id', auth, roleCheck('super_admin'), specialtyValidator, validate,
  *       404:
  *         description: Specialty not found
  */
-router.delete('/:id', auth, roleCheck('super_admin'), deleteSpecialty);
+router.delete("/:id", auth, roleCheck("super_admin"), deleteSpecialty);
 
 module.exports = router;

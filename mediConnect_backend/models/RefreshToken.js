@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const refreshTokenSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     token: {
@@ -18,7 +18,7 @@ const refreshTokenSchema = new mongoose.Schema(
       index: { expires: 0 }, // TTL index — auto-deletes expired docs
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-module.exports = mongoose.model('RefreshToken', refreshTokenSchema);
+module.exports = mongoose.model("RefreshToken", refreshTokenSchema);

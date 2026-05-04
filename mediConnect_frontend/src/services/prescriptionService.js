@@ -1,5 +1,5 @@
-import api from './api';
-import { PRESCRIPTION_ENDPOINTS } from '../constants/apiEndpoints';
+import api from "./api";
+import { PRESCRIPTION_ENDPOINTS } from "../constants/apiEndpoints";
 
 export const prescriptionService = {
   getAll: async (params = {}) => {
@@ -14,18 +14,22 @@ export const prescriptionService = {
 
   upload: async (formData) => {
     const response = await api.post(PRESCRIPTION_ENDPOINTS.UPLOAD, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   },
 
   getByAppointment: async (appointmentId) => {
-    const response = await api.get(PRESCRIPTION_ENDPOINTS.BY_APPOINTMENT(appointmentId));
+    const response = await api.get(
+      PRESCRIPTION_ENDPOINTS.BY_APPOINTMENT(appointmentId),
+    );
     return response.data;
   },
 
   getByPatient: async (patientId) => {
-    const response = await api.get(PRESCRIPTION_ENDPOINTS.BY_PATIENT(patientId));
+    const response = await api.get(
+      PRESCRIPTION_ENDPOINTS.BY_PATIENT(patientId),
+    );
     return response.data;
   },
 };

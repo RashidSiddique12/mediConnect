@@ -1,5 +1,5 @@
-import api from './api';
-import { APPOINTMENT_ENDPOINTS } from '../constants/apiEndpoints';
+import api from "./api";
+import { APPOINTMENT_ENDPOINTS } from "../constants/apiEndpoints";
 
 export const appointmentService = {
   getAll: async (params = {}) => {
@@ -13,17 +13,25 @@ export const appointmentService = {
   },
 
   create: async (appointmentData) => {
-    const response = await api.post(APPOINTMENT_ENDPOINTS.CREATE, appointmentData);
+    const response = await api.post(
+      APPOINTMENT_ENDPOINTS.CREATE,
+      appointmentData,
+    );
     return response.data;
   },
 
   update: async (id, appointmentData) => {
-    const response = await api.put(APPOINTMENT_ENDPOINTS.UPDATE(id), appointmentData);
+    const response = await api.put(
+      APPOINTMENT_ENDPOINTS.UPDATE(id),
+      appointmentData,
+    );
     return response.data;
   },
 
   cancel: async (id, reason) => {
-    const response = await api.patch(APPOINTMENT_ENDPOINTS.CANCEL(id), { reason });
+    const response = await api.patch(APPOINTMENT_ENDPOINTS.CANCEL(id), {
+      reason,
+    });
     return response.data;
   },
 
@@ -38,7 +46,9 @@ export const appointmentService = {
   },
 
   getAvailableSlots: async (doctorId, date) => {
-    const response = await api.get(APPOINTMENT_ENDPOINTS.AVAILABLE_SLOTS(doctorId, date));
+    const response = await api.get(
+      APPOINTMENT_ENDPOINTS.AVAILABLE_SLOTS(doctorId, date),
+    );
     return response.data;
   },
 };

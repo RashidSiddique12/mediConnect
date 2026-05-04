@@ -1,8 +1,12 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const auth = require('../middleware/auth');
-const { getAppointmentsByPatient } = require('../controllers/appointmentController');
-const { getPrescriptionsByPatient } = require('../controllers/prescriptionController');
+const auth = require("../middleware/auth");
+const {
+  getAppointmentsByPatient,
+} = require("../controllers/appointmentController");
+const {
+  getPrescriptionsByPatient,
+} = require("../controllers/prescriptionController");
 
 /**
  * @swagger
@@ -37,7 +41,7 @@ const { getPrescriptionsByPatient } = require('../controllers/prescriptionContro
  *       200:
  *         description: Paginated patient appointments
  */
-router.get('/:patientId/appointments', auth, getAppointmentsByPatient);
+router.get("/:patientId/appointments", auth, getAppointmentsByPatient);
 
 /**
  * @swagger
@@ -57,6 +61,6 @@ router.get('/:patientId/appointments', auth, getAppointmentsByPatient);
  *       200:
  *         description: List of patient prescriptions
  */
-router.get('/:patientId/prescriptions', auth, getPrescriptionsByPatient);
+router.get("/:patientId/prescriptions", auth, getPrescriptionsByPatient);
 
 module.exports = router;

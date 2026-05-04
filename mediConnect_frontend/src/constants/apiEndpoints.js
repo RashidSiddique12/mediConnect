@@ -1,4 +1,4 @@
-const API_VERSION = '/api/v1';
+const API_VERSION = "/api/v1";
 
 export const AUTH_ENDPOINTS = {
   LOGIN: `${API_VERSION}/auth/login`,
@@ -25,7 +25,8 @@ export const DOCTOR_ENDPOINTS = {
   UPDATE: (id) => `${API_VERSION}/doctors/${id}`,
   DELETE: (id) => `${API_VERSION}/doctors/${id}`,
   BY_HOSPITAL: (hospitalId) => `${API_VERSION}/hospitals/${hospitalId}/doctors`,
-  BY_SPECIALTY: (specialtyId) => `${API_VERSION}/specialties/${specialtyId}/doctors`,
+  BY_SPECIALTY: (specialtyId) =>
+    `${API_VERSION}/specialties/${specialtyId}/doctors`,
 };
 
 export const SCHEDULE_ENDPOINTS = {
@@ -43,17 +44,21 @@ export const APPOINTMENT_ENDPOINTS = {
   CREATE: `${API_VERSION}/appointments`,
   UPDATE: (id) => `${API_VERSION}/appointments/${id}`,
   CANCEL: (id) => `${API_VERSION}/appointments/${id}/cancel`,
-  BY_PATIENT: (patientId) => `${API_VERSION}/patients/${patientId}/appointments`,
+  BY_PATIENT: (patientId) =>
+    `${API_VERSION}/patients/${patientId}/appointments`,
   BY_DOCTOR: (doctorId) => `${API_VERSION}/doctors/${doctorId}/appointments`,
-  AVAILABLE_SLOTS: (doctorId, date) => `${API_VERSION}/doctors/${doctorId}/slots?date=${date}`,
+  AVAILABLE_SLOTS: (doctorId, date) =>
+    `${API_VERSION}/doctors/${doctorId}/slots?date=${date}`,
 };
 
 export const PRESCRIPTION_ENDPOINTS = {
   LIST: `${API_VERSION}/prescriptions`,
   GET_BY_ID: (id) => `${API_VERSION}/prescriptions/${id}`,
   UPLOAD: `${API_VERSION}/prescriptions/upload`,
-  BY_APPOINTMENT: (appointmentId) => `${API_VERSION}/appointments/${appointmentId}/prescription`,
-  BY_PATIENT: (patientId) => `${API_VERSION}/patients/${patientId}/prescriptions`,
+  BY_APPOINTMENT: (appointmentId) =>
+    `${API_VERSION}/appointments/${appointmentId}/prescription`,
+  BY_PATIENT: (patientId) =>
+    `${API_VERSION}/patients/${patientId}/prescriptions`,
 };
 
 export const REVIEW_ENDPOINTS = {

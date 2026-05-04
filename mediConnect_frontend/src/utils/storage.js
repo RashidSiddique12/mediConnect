@@ -1,4 +1,4 @@
-const STORAGE_PREFIX = 'mediconnect_';
+const STORAGE_PREFIX = "mediconnect_";
 
 /**
  * Get item from localStorage
@@ -10,7 +10,7 @@ export const getItem = (key) => {
     const item = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
     return item ? JSON.parse(item) : null;
   } catch (error) {
-    console.error('Error reading from localStorage:', error);
+    console.error("Error reading from localStorage:", error);
     return null;
   }
 };
@@ -24,7 +24,7 @@ export const setItem = (key, value) => {
   try {
     localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(value));
   } catch (error) {
-    console.error('Error writing to localStorage:', error);
+    console.error("Error writing to localStorage:", error);
   }
 };
 
@@ -36,7 +36,7 @@ export const removeItem = (key) => {
   try {
     localStorage.removeItem(`${STORAGE_PREFIX}${key}`);
   } catch (error) {
-    console.error('Error removing from localStorage:', error);
+    console.error("Error removing from localStorage:", error);
   }
 };
 
@@ -49,26 +49,28 @@ export const clearStorage = () => {
       .filter((key) => key.startsWith(STORAGE_PREFIX))
       .forEach((key) => localStorage.removeItem(key));
   } catch (error) {
-    console.error('Error clearing localStorage:', error);
+    console.error("Error clearing localStorage:", error);
   }
 };
 
 // Storage keys constants
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: 'access_token',
-  REFRESH_TOKEN: 'refresh_token',
-  USER: 'user',
-  THEME: 'theme',
-  LANGUAGE: 'language',
+  ACCESS_TOKEN: "access_token",
+  REFRESH_TOKEN: "refresh_token",
+  USER: "user",
+  THEME: "theme",
+  LANGUAGE: "language",
 };
 
 // Token management
 export const getAccessToken = () => getItem(STORAGE_KEYS.ACCESS_TOKEN);
-export const setAccessToken = (token) => setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
+export const setAccessToken = (token) =>
+  setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
 export const removeAccessToken = () => removeItem(STORAGE_KEYS.ACCESS_TOKEN);
 
 export const getRefreshToken = () => getItem(STORAGE_KEYS.REFRESH_TOKEN);
-export const setRefreshToken = (token) => setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
+export const setRefreshToken = (token) =>
+  setItem(STORAGE_KEYS.REFRESH_TOKEN, token);
 export const removeRefreshToken = () => removeItem(STORAGE_KEYS.REFRESH_TOKEN);
 
 // User management

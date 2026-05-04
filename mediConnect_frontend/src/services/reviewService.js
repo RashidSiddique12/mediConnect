@@ -1,6 +1,5 @@
-
-import api from './api';
-import { REVIEW_ENDPOINTS } from '../constants/apiEndpoints';
+import api from "./api";
+import { REVIEW_ENDPOINTS } from "../constants/apiEndpoints";
 
 export const reviewService = {
   getAll: async (params = {}) => {

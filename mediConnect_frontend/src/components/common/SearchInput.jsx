@@ -1,5 +1,5 @@
-import { Box, Input } from '@chakra-ui/react'
-import { MdSearch } from 'react-icons/md'
+import { Box, Input } from "@chakra-ui/react";
+import { MdSearch } from "react-icons/md";
 
 /**
  * Search input with a built-in search icon.
@@ -12,8 +12,8 @@ import { MdSearch } from 'react-icons/md'
 export default function SearchInput({
   value,
   onChange,
-  placeholder = 'Search…',
-  maxW = '400px',
+  placeholder = "Search…",
+  maxW = "400px",
   ...rest
 }) {
   return (
@@ -36,5 +36,5 @@ export default function SearchInput({
         onChange={(e) => onChange(e.target.value)}
       />
     </Box>
-  )
+  );
 }
