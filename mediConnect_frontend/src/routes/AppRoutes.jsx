@@ -5,6 +5,9 @@ import MainLayout from "@/layout/MainLayout";
 import Loader from "@/components/common/Loader";
 import { USER_ROLES } from "@/constants/roles";
 
+// ─── Public ───────────────────────────────────────────────────────────────────
+const HomePage = lazy(() => import("@/pages/public/HomePage"));
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 const Login = lazy(() => import("@/pages/auth/Login"));
 const Register = lazy(() => import("@/pages/auth/Register"));
@@ -50,6 +53,7 @@ export default function AppRoutes() {
     <Suspense fallback={<Loader />}>
       <Routes>
         {/* ── Public ── */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -135,8 +139,8 @@ export default function AppRoutes() {
         </Route>
 
         {/* ── Fallbacks ── */}
-        <Route path="/dashboard" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
