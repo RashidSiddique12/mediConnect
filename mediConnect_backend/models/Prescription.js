@@ -1,11 +1,22 @@
 const mongoose = require("mongoose");
 
+const prescriptionHistorySchema = new mongoose.Schema(
+  {
+    fileUrl: { type: String, required: true },
+    notes: { type: String },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    changedAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
 const prescriptionSchema = new mongoose.Schema(
   {
     appointmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Appointment",
       required: [true, "Appointment is required"],
+      unique: true,
     },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -25,6 +36,7 @@ const prescriptionSchema = new mongoose.Schema(
       type: String,
       maxlength: 1000,
     },
+    history: [prescriptionHistorySchema],
   },
   { timestamps: true },
 );

@@ -221,7 +221,9 @@ const getDoctorsByHospital = async (req, res, next) => {
     const doctors = await Doctor.find({
       hospitalId: req.params.hospitalId,
       status: "active",
-    }).populate("specialtyIds", "name");
+    })
+      .populate("hospitalId", "name address phone")
+      .populate("specialtyIds", "name");
 
     success(res, doctors);
   } catch (error) {

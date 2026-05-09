@@ -23,7 +23,7 @@ const getPrescriptions = async (req, res, next) => {
     const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
     const total = await Prescription.countDocuments(query);
     const prescriptions = await Prescription.find(query)
-      .populate("appointmentId")
+      .populate({ path: "appointmentId", populate: { path: "hospitalId", select: "name" } })
       .populate("doctorId", "name")
       .populate("patientId", "name email")
       .sort({ createdAt: -1 })
@@ -45,7 +45,7 @@ const getPrescriptions = async (req, res, next) => {
 const getPrescriptionById = async (req, res, next) => {
   try {
     const prescription = await Prescription.findById(req.params.id)
-      .populate("appointmentId")
+      .populate({ path: "appointmentId", populate: { path: "hospitalId", select: "name" } })
       .populate("doctorId", "name")
       .populate("patientId", "name email");
 
@@ -78,22 +78,43 @@ const uploadPrescription = async (req, res, next) => {
         .json({ success: false, message: "Appointment not found." });
     }
 
-    const fileUrl = `/uploads/prescriptions/${req.file.filename}`;
+    const fileUrl = req.file.path;
 
-    const prescription = await Prescription.create({
-      appointmentId,
-      doctorId: appointment.doctorId,
-      patientId: appointment.patientId,
-      fileUrl,
-      notes,
-    });
+    // Check if prescription already exists for this appointment
+    const existing = await Prescription.findOne({ appointmentId });
+
+    let prescription;
+    let message;
+
+    if (existing) {
+      // Push current version to history before updating
+      existing.history.push({
+        fileUrl: existing.fileUrl,
+        notes: existing.notes,
+        updatedBy: req.user?._id,
+        changedAt: existing.updatedAt,
+      });
+      existing.fileUrl = fileUrl;
+      existing.notes = notes || existing.notes;
+      prescription = await existing.save();
+      message = "Prescription updated successfully";
+    } else {
+      prescription = await Prescription.create({
+        appointmentId,
+        doctorId: appointment.doctorId,
+        patientId: appointment.patientId,
+        fileUrl,
+        notes,
+      });
+      message = "Prescription uploaded successfully";
+    }
 
     const populated = await Prescription.findById(prescription._id)
-      .populate("appointmentId")
+      .populate({ path: "appointmentId", populate: { path: "hospitalId", select: "name" } })
       .populate("doctorId", "name")
       .populate("patientId", "name email");
 
-    created(res, populated, "Prescription uploaded successfully");
+    created(res, populated, message);
   } catch (error) {
     next(error);
   }

@@ -13,6 +13,7 @@ import {
   Badge,
   Button,
   Avatar,
+  Portal,
   Select,
   createListCollection,
 } from "@chakra-ui/react";
@@ -196,13 +197,17 @@ export default function SearchDoctors() {
           <Select.Trigger>
             <Select.ValueText placeholder="All Specialties" />
           </Select.Trigger>
-          <Select.Content>
-            {specialtyCollection.items.map((item) => (
-              <Select.Item key={item.value} item={item}>
-                {item.label}
-              </Select.Item>
-            ))}
-          </Select.Content>
+          <Portal>
+            <Select.Positioner>
+              <Select.Content>
+                {specialtyCollection.items.map((item) => (
+                  <Select.Item key={item.value} item={item}>
+                    {item.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Positioner>
+          </Portal>
         </Select.Root>
 
         <Select.Root
@@ -214,13 +219,17 @@ export default function SearchDoctors() {
           <Select.Trigger>
             <Select.ValueText placeholder="All Hospitals" />
           </Select.Trigger>
-          <Select.Content>
-            {hospitalCollection.items.map((item) => (
-              <Select.Item key={item.value} item={item}>
-                {item.label}
-              </Select.Item>
-            ))}
-          </Select.Content>
+          <Portal>
+            <Select.Positioner>
+              <Select.Content>
+                {hospitalCollection.items.map((item) => (
+                  <Select.Item key={item.value} item={item}>
+                    {item.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Positioner>
+          </Portal>
         </Select.Root>
 
         <Flex align="center" gap={2} ml="auto">

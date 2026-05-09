@@ -17,8 +17,6 @@ function* handleFetchDoctors(action) {
     if (params?.myHospital) {
       const { myHospital, ...query } = params;
       response = yield call(fetchMyHospitalDoctors, query);
-    } else if (params?.hospitalId) {
-      response = yield call(fetchDoctorsByHospital, params.hospitalId);
     } else {
       response = yield call(fetchDoctors, params);
     }

@@ -29,9 +29,14 @@ function* handleFetchPrescriptionByAppointment(action) {
       ),
     );
   } catch (error) {
-    yield put(
-      prescriptionSlice.fetchPrescriptionByAppointmentFailure(error.message),
-    );
+    // 404 means no prescription exists yet — not a real error
+    if (error.response?.status === 404) {
+      yield put(prescriptionSlice.fetchPrescriptionByAppointmentSuccess(null));
+    } else {
+      yield put(
+        prescriptionSlice.fetchPrescriptionByAppointmentFailure(error.message),
+      );
+    }
   }
 }
 

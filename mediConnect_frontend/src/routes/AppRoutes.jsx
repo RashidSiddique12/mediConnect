@@ -136,7 +136,7 @@ export default function AppRoutes() {
               element={<AppointmentDetails />}
             />
             <Route
-              path="/hospital/prescriptions/upload/:id"
+              path="/hospital/prescriptions/upload/:appointmentId"
               element={<UploadPrescription />}
             />
           </Route>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -11,19 +11,56 @@ import {
   Field,
   Input,
   Textarea,
+  Badge,
+  Image,
 } from "@chakra-ui/react";
-import { MdUpload, MdCloudUpload, MdInsertDriveFile } from "react-icons/md";
+import {
+  MdUpload,
+  MdCloudUpload,
+  MdInsertDriveFile,
+  MdOpenInNew,
+  MdHistory,
+  MdWarning,
+  MdCheckCircle,
+  MdArrowBack,
+} from "react-icons/md";
 import PageHeader from "@/components/common/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
+import Loader from "@/components/common/Loader";
 import * as appointmentSlice from "@/features/appointments/appointmentSlice";
 import { selectCurrentAppointment } from "@/features/appointments/appointmentSelectors";
 import * as prescriptionSlice from "@/features/prescriptions/prescriptionSlice";
 import {
   selectPrescriptionUploading,
   selectPrescriptionUploaded,
+  selectCurrentPrescription,
+  selectPrescriptionsLoading,
 } from "@/features/prescriptions/prescriptionSelectors";
 
 const ACCEPTED_FORMATS = ".pdf,.jpg,.jpeg,.png";
+const IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatFileSize(bytes) {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function isImageUrl(url) {
+  return /\.(jpg|jpeg|png)(\?.*)?$/i.test(url || "");
+}
 
 export default function UploadPrescription() {
   const { appointmentId } = useParams();
@@ -32,36 +69,95 @@ export default function UploadPrescription() {
   const appointment = useSelector(selectCurrentAppointment);
   const uploading = useSelector(selectPrescriptionUploading);
   const uploaded = useSelector(selectPrescriptionUploaded);
+  const existingPrescription = useSelector(selectCurrentPrescription);
+  const loadingPrescription = useSelector(selectPrescriptionsLoading);
   const fileRef = useRef(null);
   const [fileName, setFileName] = useState("");
+  const [fileSize, setFileSize] = useState(0);
+  const [preview, setPreview] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const pendingFormRef = useRef(null);
+
+  const isEditMode = !!existingPrescription;
 
   useEffect(() => {
     dispatch(appointmentSlice.fetchAppointmentByIdRequest(appointmentId));
+    dispatch(
+      prescriptionSlice.fetchPrescriptionByAppointmentRequest(appointmentId),
+    );
     return () => dispatch(prescriptionSlice.resetUpload());
   }, [dispatch, appointmentId]);
 
-  useEffect(() => {
-    if (uploaded) {
-      const timer = setTimeout(
-        () => navigate(`/hospital/appointments/${appointmentId}`),
-        1500,
-      );
-      return () => clearTimeout(timer);
+  const handleFileSelect = useCallback((file) => {
+    if (!file) return;
+    setFileName(file.name);
+    setFileSize(file.size);
+    if (IMAGE_TYPES.includes(file.type)) {
+      const url = URL.createObjectURL(file);
+      setPreview(url);
+    } else {
+      setPreview(null);
     }
-  }, [uploaded, navigate, appointmentId]);
+  }, []);
 
   const handleFileChange = (e) => {
-    setFileName(e.target.files?.[0]?.name || "");
+    handleFileSelect(e.target.files?.[0]);
+  };
+
+  // Drag & drop handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowed = /jpeg|jpg|png|pdf/;
+      if (!allowed.test(file.type)) return;
+      // Set the file on the hidden input via DataTransfer
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileRef.current.files = dt.files;
+      handleFileSelect(file);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     formData.set("appointmentId", appointmentId);
+
+    // If editing, show confirmation dialog
+    if (isEditMode && !showConfirm) {
+      pendingFormRef.current = formData;
+      setShowConfirm(true);
+      return;
+    }
+
     dispatch(prescriptionSlice.uploadPrescriptionRequest(formData));
+    setShowConfirm(false);
   };
 
-  if (!appointment) {
+  const handleConfirmUpdate = () => {
+    if (pendingFormRef.current) {
+      dispatch(
+        prescriptionSlice.uploadPrescriptionRequest(pendingFormRef.current),
+      );
+      pendingFormRef.current = null;
+    }
+    setShowConfirm(false);
+  };
+
+  if (!appointment && !loadingPrescription) {
     return (
       <EmptyState
         title="Appointment not found"
@@ -71,55 +167,233 @@ export default function UploadPrescription() {
     );
   }
 
+  if (loadingPrescription && !appointment) return <Loader />;
+
+  // Status gating — only allow for completed appointments
+  if (appointment?.status && appointment.status !== "completed") {
+    return (
+      <Stack gap={6} w="100%">
+        <PageHeader
+          title="Upload Prescription"
+          backTo={`/hospital/appointments/${appointmentId}`}
+        />
+        <Card.Root shadow="sm" rounded="xl">
+          <Card.Body>
+            <Flex direction="column" align="center" py={10} gap={3}>
+              <Box color="orange.400">
+                <MdWarning size={48} />
+              </Box>
+              <Text fontWeight="600" color="gray.700">
+                Prescription upload not available
+              </Text>
+              <Text
+                fontSize="sm"
+                color="gray.500"
+                textAlign="center"
+                maxW="360px"
+              >
+                Prescriptions can only be uploaded after the appointment is
+                completed. Current status:{" "}
+                <Badge colorPalette="orange">{appointment.status}</Badge>
+              </Text>
+              <Button
+                mt={3}
+                variant="outline"
+                colorPalette="teal"
+                onClick={() =>
+                  navigate(`/hospital/appointments/${appointmentId}`)
+                }
+              >
+                <MdArrowBack /> Back to Appointment
+              </Button>
+            </Flex>
+          </Card.Body>
+        </Card.Root>
+      </Stack>
+    );
+  }
+
   const backPath = `/hospital/appointments/${appointmentId}`;
+
+  // Success state — inline with actions (no auto-redirect)
+  if (uploaded) {
+    return (
+      <Stack gap={6} w="100%">
+        <PageHeader
+          title={isEditMode ? "Prescription Updated" : "Prescription Uploaded"}
+          backTo={backPath}
+        />
+        <Card.Root shadow="sm" rounded="xl">
+          <Card.Body>
+            <Flex direction="column" align="center" py={10} gap={4}>
+              <Box color="teal.500">
+                <MdCheckCircle size={56} />
+              </Box>
+              <Text fontWeight="700" fontSize="lg" color="teal.700">
+                {isEditMode
+                  ? "Prescription updated successfully!"
+                  : "Prescription uploaded successfully!"}
+              </Text>
+              <Text fontSize="sm" color="gray.500" textAlign="center">
+                The prescription is now available to the patient.
+              </Text>
+              <Flex gap={3} mt={2}>
+                {existingPrescription?.fileUrl && (
+                  <Button
+                    variant="outline"
+                    colorPalette="teal"
+                    size="sm"
+                    asChild
+                  >
+                    <a
+                      href={existingPrescription.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MdOpenInNew /> View File
+                    </a>
+                  </Button>
+                )}
+                <Button
+                  colorPalette="teal"
+                  size="sm"
+                  onClick={() => navigate(backPath)}
+                >
+                  <MdArrowBack /> Back to Appointment
+                </Button>
+              </Flex>
+            </Flex>
+          </Card.Body>
+        </Card.Root>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap={6} w="100%">
       <PageHeader
-        title="Upload Prescription"
-        subtitle={`For: ${appointment.patientId?.name || "Patient"} | ${appointment.doctorId?.name || "Doctor"}`}
+        title={isEditMode ? "Update Prescription" : "Upload Prescription"}
+        subtitle={`For: ${appointment?.patientId?.name || "Patient"} | Dr. ${appointment?.doctorId?.name || "Doctor"}`}
         backTo={backPath}
       />
 
-      {uploaded && (
-        <Box
-          bg="teal.50"
-          border="1px solid"
-          borderColor="teal.200"
-          p={4}
-          rounded="lg"
+      {/* Current prescription info (edit mode) */}
+      {isEditMode && (
+        <Card.Root
+          shadow="sm"
+          rounded="xl"
+          borderLeft="4px solid"
+          borderColor="orange.400"
         >
-          <Flex align="center" gap={2}>
-            <Box
-              w={5}
-              h={5}
-              bg="teal.500"
-              color="white"
-              rounded="full"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              fontSize="xs"
-              fontWeight="700"
-              flexShrink={0}
-            >
-              ✓
-            </Box>
-            <Text fontSize="sm" fontWeight="600" color="teal.700">
-              Prescription uploaded successfully! Redirecting…
+          <Card.Body>
+            <Flex align="center" gap={2} mb={3}>
+              <MdWarning size={18} color="var(--chakra-colors-orange-500)" />
+              <Text fontWeight="600" fontSize="sm" color="orange.700">
+                A prescription already exists for this appointment
+              </Text>
+            </Flex>
+            <Flex align="center" gap={3} bg="gray.50" rounded="lg" p={3}>
+              {isImageUrl(existingPrescription.fileUrl) ? (
+                <Image
+                  src={existingPrescription.fileUrl}
+                  alt="Current prescription"
+                  boxSize="60px"
+                  objectFit="cover"
+                  rounded="md"
+                />
+              ) : (
+                <Box color="teal.500">
+                  <MdInsertDriveFile size={40} />
+                </Box>
+              )}
+              <Box flex={1}>
+                <Text fontSize="sm" fontWeight="600" color="gray.700">
+                  Current Prescription
+                </Text>
+                <Text fontSize="xs" color="gray.500">
+                  Uploaded: {formatDate(existingPrescription.updatedAt)}
+                </Text>
+                {existingPrescription.notes && (
+                  <Text fontSize="xs" color="gray.500" mt={1}>
+                    Notes: {existingPrescription.notes}
+                  </Text>
+                )}
+              </Box>
+              <Button size="xs" variant="outline" colorPalette="teal" asChild>
+                <a
+                  href={existingPrescription.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MdOpenInNew /> View
+                </a>
+              </Button>
+            </Flex>
+            <Text fontSize="xs" color="gray.400" mt={2}>
+              Uploading a new file will replace the current one. The old version
+              will be saved in history.
             </Text>
-          </Flex>
-        </Box>
+          </Card.Body>
+        </Card.Root>
       )}
 
+      {/* Confirmation dialog for updates */}
+      {showConfirm && (
+        <Card.Root
+          shadow="md"
+          rounded="xl"
+          borderColor="orange.300"
+          borderWidth="1px"
+        >
+          <Card.Body>
+            <Flex direction="column" gap={3}>
+              <Flex align="center" gap={2}>
+                <MdWarning size={20} color="var(--chakra-colors-orange-500)" />
+                <Text fontWeight="700" color="orange.700">
+                  Confirm Replacement
+                </Text>
+              </Flex>
+              <Text fontSize="sm" color="gray.600">
+                You&apos;re replacing the prescription from{" "}
+                <strong>{formatDate(existingPrescription?.updatedAt)}</strong>.
+                The current version will be archived in the history.
+              </Text>
+              <Flex gap={2} justify="flex-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowConfirm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  colorPalette="orange"
+                  onClick={handleConfirmUpdate}
+                  loading={uploading}
+                >
+                  Replace Prescription
+                </Button>
+              </Flex>
+            </Flex>
+          </Card.Body>
+        </Card.Root>
+      )}
+
+      {/* Upload form */}
       <Card.Root shadow="sm" rounded="xl">
         <Card.Body as="form" onSubmit={handleSubmit}>
           <Stack gap={5}>
-            <Field.Root required>
-              <Field.Label>Prescription File</Field.Label>
+            <Field.Root required={!isEditMode}>
+              <Field.Label>
+                {isEditMode ? "New Prescription File" : "Prescription File"}
+              </Field.Label>
               <Box
                 border="2px dashed"
-                borderColor={fileName ? "teal.300" : "gray.200"}
+                borderColor={
+                  isDragging ? "teal.500" : fileName ? "teal.300" : "gray.200"
+                }
+                bg={isDragging ? "teal.50" : "transparent"}
                 rounded="lg"
                 p={6}
                 textAlign="center"
@@ -127,6 +401,9 @@ export default function UploadPrescription() {
                 _hover={{ borderColor: "teal.400", bg: "teal.50" }}
                 transition="all 0.15s"
                 onClick={() => fileRef.current?.click()}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
               >
                 <Input
                   ref={fileRef}
@@ -138,26 +415,44 @@ export default function UploadPrescription() {
                 />
                 {fileName ? (
                   <Flex direction="column" align="center" gap={2}>
-                    <Box color="teal.500">
-                      <MdInsertDriveFile size={32} />
-                    </Box>
+                    {preview ? (
+                      <Image
+                        src={preview}
+                        alt="Preview"
+                        maxH="120px"
+                        maxW="200px"
+                        objectFit="contain"
+                        rounded="md"
+                      />
+                    ) : (
+                      <Box color="teal.500">
+                        <MdInsertDriveFile size={32} />
+                      </Box>
+                    )}
                     <Text fontSize="sm" fontWeight="600" color="teal.700">
                       {fileName}
                     </Text>
-                    <Text fontSize="xs" color="gray.500">
-                      Click to change file
+                    {fileSize > 0 && (
+                      <Text fontSize="xs" color="gray.500">
+                        {formatFileSize(fileSize)}
+                      </Text>
+                    )}
+                    <Text fontSize="xs" color="gray.400">
+                      Click or drag to change file
                     </Text>
                   </Flex>
                 ) : (
                   <Flex direction="column" align="center" gap={2}>
-                    <Box color="gray.300">
+                    <Box color={isDragging ? "teal.500" : "gray.300"}>
                       <MdCloudUpload size={40} />
                     </Box>
                     <Text fontSize="sm" fontWeight="600" color="gray.600">
-                      Click to select a file
+                      {isDragging
+                        ? "Drop file here"
+                        : "Click or drag & drop a file"}
                     </Text>
                     <Text fontSize="xs" color="gray.400">
-                      Accepted formats: PDF, JPG, PNG
+                      Accepted: PDF, JPG, PNG (max 5MB)
                     </Text>
                   </Flex>
                 )}
@@ -170,6 +465,9 @@ export default function UploadPrescription() {
                 name="notes"
                 rows={3}
                 placeholder="Follow-up instructions, dietary advice…"
+                defaultValue={
+                  isEditMode ? existingPrescription?.notes || "" : ""
+                }
               />
             </Field.Root>
 
@@ -181,14 +479,103 @@ export default function UploadPrescription() {
                 type="submit"
                 colorPalette="teal"
                 loading={uploading}
-                loadingText="Uploading…"
+                loadingText={isEditMode ? "Updating…" : "Uploading…"}
+                disabled={!fileName && !isEditMode}
               >
-                <MdUpload /> Upload Prescription
+                <MdUpload />{" "}
+                {isEditMode ? "Update Prescription" : "Upload Prescription"}
               </Button>
             </Flex>
           </Stack>
         </Card.Body>
       </Card.Root>
+
+      {/* Version history */}
+      {isEditMode && existingPrescription.history?.length > 0 && (
+        <Card.Root shadow="sm" rounded="xl">
+          <Card.Body>
+            <Flex
+              align="center"
+              justify="space-between"
+              cursor="pointer"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              <Flex align="center" gap={2}>
+                <MdHistory size={18} color="var(--chakra-colors-gray-500)" />
+                <Text fontWeight="600" fontSize="sm" color="gray.700">
+                  Version History ({existingPrescription.history.length})
+                </Text>
+              </Flex>
+              <Text fontSize="xs" color="teal.600" fontWeight="500">
+                {showHistory ? "Hide" : "Show"}
+              </Text>
+            </Flex>
+
+            {showHistory && (
+              <Stack gap={3} mt={4}>
+                {[...existingPrescription.history]
+                  .reverse()
+                  .map((entry, idx) => (
+                    <Flex
+                      key={idx}
+                      align="center"
+                      gap={3}
+                      bg="gray.50"
+                      rounded="lg"
+                      p={3}
+                    >
+                      {isImageUrl(entry.fileUrl) ? (
+                        <Image
+                          src={entry.fileUrl}
+                          alt={`Version ${existingPrescription.history.length - idx}`}
+                          boxSize="45px"
+                          objectFit="cover"
+                          rounded="md"
+                        />
+                      ) : (
+                        <Box color="gray.400">
+                          <MdInsertDriveFile size={28} />
+                        </Box>
+                      )}
+                      <Box flex={1}>
+                        <Flex align="center" gap={2}>
+                          <Text fontSize="sm" fontWeight="600" color="gray.600">
+                            Version {existingPrescription.history.length - idx}
+                          </Text>
+                          <Badge size="sm" colorPalette="gray">
+                            Replaced
+                          </Badge>
+                        </Flex>
+                        <Text fontSize="xs" color="gray.400">
+                          {formatDate(entry.changedAt)}
+                        </Text>
+                        {entry.notes && (
+                          <Text fontSize="xs" color="gray.500" mt={0.5}>
+                            {entry.notes}
+                          </Text>
+                        )}
+                      </Box>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        colorPalette="teal"
+                        asChild
+                      >
+                        <a
+                          href={entry.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MdOpenInNew />
+                        </a>
+                      </Button>
+                    </Flex>
+                  ))}
+              </Stack>
+            )}
+          </Card.Body>
+        </Card.Root>
+      )}
     </Stack>
   );
 }

@@ -12,4 +12,7 @@ module.exports = {
   JWT_EXPIRE: process.env.JWT_EXPIRE || "15m",
   JWT_REFRESH_EXPIRE: process.env.JWT_REFRESH_EXPIRE || "7d",
   CORS_ORIGIN: process.env.CORS_ORIGIN || "http://localhost:5173",
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 };

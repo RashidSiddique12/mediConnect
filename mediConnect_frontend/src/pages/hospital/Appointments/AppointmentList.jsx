@@ -10,6 +10,7 @@ import {
   Button,
   Avatar,
   Card,
+  Portal,
   Select,
   createListCollection,
 } from "@chakra-ui/react";
@@ -355,13 +356,17 @@ export default function AppointmentList() {
               <Select.Trigger>
                 <Select.ValueText placeholder="Filter status" />
               </Select.Trigger>
-              <Select.Content>
-                {STATUS_OPTIONS.items.map((item) => (
-                  <Select.Item key={item.value} item={item}>
-                    {item.label}
-                  </Select.Item>
-                ))}
-              </Select.Content>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content>
+                    {STATUS_OPTIONS.items.map((item) => (
+                      <Select.Item key={item.value} item={item}>
+                        {item.label}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
             </Select.Root>
           </Flex>
         </Card.Body>
