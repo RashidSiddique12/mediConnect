@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   Box,
   Stack,
@@ -16,11 +16,9 @@ import {
   Image,
   Dialog,
   IconButton,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react'
 import {
-  MdPerson,
   MdLocalHospital,
-  MdUpload,
   MdDescription,
   MdCalendarToday,
   MdAccessTime,
@@ -34,60 +32,65 @@ import {
   MdZoomIn,
   MdZoomOut,
   MdClose,
-} from "react-icons/md";
-import PageHeader from "@/components/common/PageHeader";
-import EmptyState from "@/components/common/EmptyState";
-import Loader from "@/components/common/Loader";
-import * as appointmentSlice from "@/features/appointments/appointmentSlice";
+  MdStar,
+  MdLocationOn,
+  MdSchool,
+  MdWork,
+  MdTranslate,
+  MdVideocam,
+  MdMale,
+} from 'react-icons/md'
+import PageHeader from '@/components/common/PageHeader'
+import EmptyState from '@/components/common/EmptyState'
+import Loader from '@/components/common/Loader'
+import * as appointmentSlice from '@/features/appointments/appointmentSlice'
 import {
   selectCurrentAppointment,
   selectAppointmentsLoading,
-} from "@/features/appointments/appointmentSelectors";
-import * as prescriptionSlice from "@/features/prescriptions/prescriptionSlice";
-import { selectCurrentPrescription } from "@/features/prescriptions/prescriptionSelectors";
+} from '@/features/appointments/appointmentSelectors'
+import * as prescriptionSlice from '@/features/prescriptions/prescriptionSlice'
+import { selectCurrentPrescription } from '@/features/prescriptions/prescriptionSelectors'
 
-const STATUS_COLOR = { booked: "green", completed: "teal", cancelled: "red" };
+const STATUS_COLOR = { booked: 'green', completed: 'teal', cancelled: 'red' }
 const STATUS_ICON = {
   booked: MdAccessTime,
   completed: MdCheckCircle,
   cancelled: MdCancel,
-};
+}
 
 function formatDate(dateStr) {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 export default function AppointmentDetails() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const appointment = useSelector(selectCurrentAppointment);
-  const loading = useSelector(selectAppointmentsLoading);
-  const prescription = useSelector(selectCurrentPrescription);
-  const [imageOpen, setImageOpen] = useState(false);
-  const [zoom, setZoom] = useState(1);
-
-  const handleZoomIn = () => setZoom((z) => Math.min(z + 0.25, 3));
-  const handleZoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.5));
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const appointment = useSelector(selectCurrentAppointment)
+  const loading = useSelector(selectAppointmentsLoading)
+  const prescription = useSelector(selectCurrentPrescription)
+  const [imageOpen, setImageOpen] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
-    dispatch(appointmentSlice.fetchAppointmentByIdRequest(id));
-    dispatch(prescriptionSlice.fetchPrescriptionByAppointmentRequest(id));
-  }, [dispatch, id]);
+    dispatch(appointmentSlice.fetchAppointmentByIdRequest(id))
+    dispatch(prescriptionSlice.fetchPrescriptionByAppointmentRequest(id))
+  }, [dispatch, id])
 
-  const handleUpdateStatus = (status) =>
-    dispatch(appointmentSlice.updateAppointmentRequest({ id, status }));
+  const handleCancel = () => {
+    setCancelling(true)
+    dispatch(appointmentSlice.cancelAppointmentRequest(id))
+    setTimeout(() => setCancelling(false), 2000)
+  }
 
-  const handleCancel = () =>
-    dispatch(appointmentSlice.cancelAppointmentRequest(id));
-
-  if (loading) return <Loader />;
+  if (loading) return <Loader />
 
   if (!appointment) {
     return (
@@ -95,21 +98,21 @@ export default function AppointmentDetails() {
         title="Appointment not found"
         description="The appointment you're looking for doesn't exist or has been removed"
         actionLabel="Back to Appointments"
-        onAction={() => navigate("/hospital/appointments")}
+        onAction={() => navigate('/patient/appointments')}
       />
-    );
+    )
   }
 
-  const { status } = appointment;
-  const StatusIcon = STATUS_ICON[status] || MdAccessTime;
-  const statusColor = STATUS_COLOR[status] || "gray";
+  const { status } = appointment
+  const StatusIcon = STATUS_ICON[status] || MdAccessTime
+  const statusColor = STATUS_COLOR[status] || 'gray'
 
   return (
     <Stack gap={6} w="100%">
       <PageHeader
         title="Appointment Details"
-        subtitle={`ID: ${appointment._id}`}
-        backTo="/hospital/appointments"
+        onBack={() => navigate(-1)}
+        backLabel="Back"
       />
 
       {/* ─── Status Banner ─── */}
@@ -159,106 +162,192 @@ export default function AppointmentDetails() {
                 </Flex>
               </Box>
             </Flex>
-            {status === "booked" && (
-              <Flex gap={2}>
+
+            {/* Patient actions */}
+            <Flex gap={2} wrap="wrap">
+              {status === 'completed' && (
                 <Button
                   size="sm"
-                  colorPalette="teal"
-                  onClick={() => handleUpdateStatus("completed")}
-                >
-                  <MdCheckCircle /> Mark Complete
-                </Button>
-                <Button
-                  size="sm"
+                  colorPalette="orange"
                   variant="outline"
-                  colorPalette="red"
-                  onClick={handleCancel}
+                  onClick={() =>
+                    navigate(`/patient/review/${appointment._id}`)
+                  }
                 >
-                  <MdCancel /> Cancel
+                  <MdStar /> Rate Doctor
                 </Button>
-              </Flex>
-            )}
+              )}
+              {status === 'booked' && (
+                <>
+                  <Button
+                    size="sm"
+                    colorPalette="teal"
+                    onClick={() =>
+                      navigate(
+                        `/patient/book/${appointment.doctorId?._id}`,
+                      )
+                    }
+                  >
+                    Reschedule <MdArrowForward />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    colorPalette="red"
+                    onClick={handleCancel}
+                    disabled={cancelling}
+                  >
+                    <MdCancel />{' '}
+                    {cancelling ? 'Cancelling…' : 'Cancel'}
+                  </Button>
+                </>
+              )}
+            </Flex>
           </Flex>
         </Card.Body>
       </Card.Root>
 
-      {/* ─── Patient & Doctor Info ─── */}
-      <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
-        {/* Patient Card */}
-        <Card.Root shadow="sm" rounded="xl">
-          <Card.Body>
-            <Flex align="center" gap={2} mb={4}>
-              <Box bg="blue.100" p={2} rounded="lg" color="blue.600">
-                <MdPerson size={20} />
-              </Box>
-              <Heading size="sm">Patient</Heading>
-            </Flex>
-            <Flex align="center" gap={3} mb={4}>
-              <Avatar.Root size="lg" bg="blue.500" flexShrink={0}>
-                <Avatar.Fallback
-                  name={appointment.patientId?.name || "Patient"}
-                />
-              </Avatar.Root>
-              <Box>
-                <Text fontWeight="700" fontSize="md">
-                  {appointment.patientId?.name || "N/A"}
-                </Text>
-                <Text fontSize="xs" color="gray.500">
-                  Patient
-                </Text>
-              </Box>
-            </Flex>
-            <Separator mb={3} />
-            <Stack gap={3}>
-              <InfoRow
-                icon={MdEmail}
-                label="Email"
-                value={appointment.patientId?.email}
-              />
-              <InfoRow
-                icon={MdPhone}
-                label="Phone"
-                value={appointment.patientId?.phone}
-              />
-            </Stack>
-          </Card.Body>
-        </Card.Root>
-
-        {/* Doctor & Hospital Card */}
+      {/* ─── Doctor & Hospital Info ─── */}
+      <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
+        {/* Doctor Card */}
         <Card.Root shadow="sm" rounded="xl">
           <Card.Body>
             <Flex align="center" gap={2} mb={4}>
               <Box bg="teal.100" p={2} rounded="lg" color="teal.600">
-                <MdLocalHospital size={20} />
+                <MdMedicalServices size={20} />
               </Box>
-              <Heading size="sm">Doctor & Hospital</Heading>
+              <Heading size="sm">Doctor</Heading>
             </Flex>
             <Flex align="center" gap={3} mb={4}>
               <Avatar.Root size="lg" bg="teal.500" flexShrink={0}>
                 <Avatar.Fallback
-                  name={appointment.doctorId?.name || "Doctor"}
+                  name={appointment.doctorId?.name || 'Doctor'}
                 />
               </Avatar.Root>
               <Box>
                 <Text fontWeight="700" fontSize="md">
-                  {appointment.doctorId?.name || "N/A"}
+                  {appointment.doctorId?.name || 'N/A'}
                 </Text>
-                <Text fontSize="xs" color="gray.500">
-                  Doctor
-                </Text>
+                <Flex gap={1} mt={0.5} wrap="wrap">
+                  {(appointment.doctorId?.specialtyIds?.length
+                    ? appointment.doctorId.specialtyIds
+                    : [{ name: appointment.doctorId?.specialtyId?.name || 'General' }]
+                  ).map((s, i) => (
+                    <Badge
+                      key={i}
+                      colorPalette="teal"
+                      size="sm"
+                      variant="outline"
+                    >
+                      {s.name || s}
+                    </Badge>
+                  ))}
+                </Flex>
               </Box>
             </Flex>
             <Separator mb={3} />
             <Stack gap={3}>
+              {appointment.doctorId?.qualification && (
+                <InfoRow
+                  icon={MdSchool}
+                  label="Qualification"
+                  value={appointment.doctorId.qualification}
+                />
+              )}
+              {appointment.doctorId?.experience > 0 && (
+                <InfoRow
+                  icon={MdWork}
+                  label="Experience"
+                  value={`${appointment.doctorId.experience} years`}
+                />
+              )}
+              {/* {appointment.doctorId?.gender && (
+                <InfoRow
+                  icon={MdMale}
+                  label="Gender"
+                  value={appointment.doctorId.gender.charAt(0).toUpperCase() + appointment.doctorId.gender.slice(1)}
+                />
+              )} */}
+              {appointment.doctorId?.consultationFee > 0 && (
+                <InfoRow
+                  icon={MdDescription}
+                  label="Fee"
+                  value={`$${appointment.doctorId.consultationFee}`}
+                />
+              )}
+              {appointment.doctorId?.email && (
+                <InfoRow
+                  icon={MdEmail}
+                  label="Email"
+                  value={appointment.doctorId.email}
+                />
+              )}
+              {appointment.doctorId?.phone && (
+                <InfoRow
+                  icon={MdPhone}
+                  label="Phone"
+                  value={appointment.doctorId.phone}
+                />
+              )}
+              {/* {appointment.doctorId?.languages?.length > 0 && (
+                <InfoRow
+                  icon={MdTranslate}
+                  label="Languages"
+                  value={appointment.doctorId.languages.join(', ')}
+                />
+              )} */}
+              {/* {appointment.doctorId?.consultationTypes?.length > 0 && (
+                <InfoRow
+                  icon={MdVideocam}
+                  label="Consult"
+                  value={appointment.doctorId.consultationTypes
+                    .map((t) => t.replace('_', ' '))
+                    .join(', ')}
+                />
+              )} */}
+            </Stack>
+          </Card.Body>
+        </Card.Root>
+
+        {/* Hospital Card */}
+        <Card.Root shadow="sm" rounded="xl">
+          <Card.Body>
+            <Flex align="center" gap={2} mb={4}>
+              <Box bg="blue.100" p={2} rounded="lg" color="blue.600">
+                <MdLocalHospital size={20} />
+              </Box>
+              <Heading size="sm">Hospital</Heading>
+            </Flex>
+            <Text fontWeight="700" fontSize="md" mb={3}>
+              {appointment.hospitalId?.name || 'N/A'}
+            </Text>
+            <Separator mb={3} />
+            <Stack gap={3}>
               <InfoRow
-                icon={MdLocalHospital}
-                label="Hospital"
-                value={appointment.hospitalId?.name}
+                icon={MdLocationOn}
+                label="Address"
+                value={
+                  appointment.hospitalId?.address
+                    ? [
+                        appointment.hospitalId.address.street,
+                        appointment.hospitalId.address.city,
+                        appointment.hospitalId.address.state,
+                        appointment.hospitalId.address.zipCode,
+                      ]
+                        .filter(Boolean)
+                        .join(', ')
+                    : undefined
+                }
               />
               <InfoRow
-                icon={MdMedicalServices}
-                label="Specialty"
-                value={appointment.doctorId?.specialtyId?.name}
+                icon={MdPhone}
+                label="Phone"
+                value={appointment.hospitalId?.phone}
+              />
+              <InfoRow
+                icon={MdEmail}
+                label="Email"
+                value={appointment.hospitalId?.email}
               />
             </Stack>
           </Card.Body>
@@ -266,20 +355,45 @@ export default function AppointmentDetails() {
       </Grid>
 
       {/* ─── Reason / Notes ─── */}
-      {appointment.reason && (
+      {(appointment.reason || appointment.notes) && (
         <Card.Root shadow="sm" rounded="xl">
           <Card.Body>
             <Flex align="center" gap={2} mb={3}>
               <Box bg="orange.100" p={2} rounded="lg" color="orange.600">
                 <MdNotes size={20} />
               </Box>
-              <Heading size="sm">Reason for Visit</Heading>
+              <Heading size="sm">Visit Details</Heading>
             </Flex>
-            <Box bg="orange.50" p={4} rounded="lg">
-              <Text fontSize="sm" color="gray.700" lineHeight="tall">
-                {appointment.reason}
-              </Text>
-            </Box>
+            {appointment.reason && (
+              <Box bg="orange.50" p={4} rounded="lg">
+                <Text
+                  fontSize="xs"
+                  color="gray.500"
+                  fontWeight="600"
+                  mb={1}
+                >
+                  Reason for Visit
+                </Text>
+                <Text fontSize="sm" color="gray.700" lineHeight="tall">
+                  {appointment.reason}
+                </Text>
+              </Box>
+            )}
+            {appointment.notes && (
+              <Box bg="gray.50" p={4} rounded="lg" mt={appointment.reason ? 3 : 0}>
+                <Text
+                  fontSize="xs"
+                  color="gray.500"
+                  fontWeight="600"
+                  mb={1}
+                >
+                  Notes
+                </Text>
+                <Text fontSize="sm" color="gray.700" lineHeight="tall">
+                  {appointment.notes}
+                </Text>
+              </Box>
+            )}
           </Card.Body>
         </Card.Root>
       )}
@@ -287,22 +401,11 @@ export default function AppointmentDetails() {
       {/* ─── Prescription ─── */}
       <Card.Root shadow="sm" rounded="xl">
         <Card.Body>
-          <Flex justify="space-between" align="center" mb={4}>
-            <Flex align="center" gap={2}>
-              <Box bg="purple.100" p={2} rounded="lg" color="purple.600">
-                <MdDescription size={20} />
-              </Box>
-              <Heading size="sm">Prescription</Heading>
-            </Flex>
-            {status === "completed" && (
-              <Button
-                size="sm"
-                colorPalette="teal"
-                onClick={() => navigate(`/hospital/prescriptions/upload/${id}`)}
-              >
-                <MdUpload /> Upload Prescription
-              </Button>
-            )}
+          <Flex align="center" gap={2} mb={4}>
+            <Box bg="purple.100" p={2} rounded="lg" color="purple.600">
+              <MdDescription size={20} />
+            </Box>
+            <Heading size="sm">Prescription</Heading>
           </Flex>
 
           {prescription ? (
@@ -330,13 +433,18 @@ export default function AppointmentDetails() {
                   <MdCheckCircle size={16} />
                 </Box>
                 <Text fontWeight="700" color="teal.700">
-                  Prescription uploaded
+                  Prescription available
                 </Text>
               </Flex>
               {prescription.notes && (
                 <Box bg="white" p={3} rounded="md" mt={3}>
-                  <Text fontSize="xs" color="gray.500" fontWeight="600" mb={1}>
-                    Notes
+                  <Text
+                    fontSize="xs"
+                    color="gray.500"
+                    fontWeight="600"
+                    mb={1}
+                  >
+                    Doctor&apos;s Notes
                   </Text>
                   <Text fontSize="sm" color="gray.700">
                     {prescription.notes}
@@ -358,11 +466,11 @@ export default function AppointmentDetails() {
                         borderColor="gray.200"
                         cursor="pointer"
                         filter="brightness(1)"
-                        _hover={{ filter: "brightness(0.75)" }}
+                        _hover={{ filter: 'brightness(0.75)' }}
                         transition="filter 0.2s"
                         onClick={() => {
-                          setZoom(1);
-                          setImageOpen(true);
+                          setZoom(1)
+                          setImageOpen(true)
                         }}
                       />
                       <Text
@@ -414,13 +522,16 @@ export default function AppointmentDetails() {
               rounded="lg"
               bg="gray.50"
             >
-              <MdDescription size={32} style={{ margin: "0 auto 8px" }} />
+              <MdDescription
+                size={32}
+                style={{ margin: '0 auto 8px' }}
+              />
               <Text fontSize="sm" fontWeight="500">
                 No prescription uploaded yet
               </Text>
-              {status === "completed" && (
+              {status === 'booked' && (
                 <Text fontSize="xs" mt={1} color="gray.500">
-                  Click &ldquo;Upload Prescription&rdquo; to add one
+                  Your doctor will upload it after the visit
                 </Text>
               )}
             </Box>
@@ -434,7 +545,7 @@ export default function AppointmentDetails() {
           <Dialog.Root
             open={imageOpen}
             onOpenChange={(e) => {
-              if (!e.open) setImageOpen(false);
+              if (!e.open) setImageOpen(false)
             }}
             size="cover"
           >
@@ -452,13 +563,20 @@ export default function AppointmentDetails() {
                     size="sm"
                     bg="whiteAlpha.800"
                     color="gray.700"
-                    _hover={{ bg: "white" }}
-                    onClick={handleZoomIn}
+                    _hover={{ bg: 'white' }}
+                    onClick={() =>
+                      setZoom((z) => Math.min(z + 0.25, 3))
+                    }
                     aria-label="Zoom in"
                   >
                     <MdZoomIn size={20} />
                   </IconButton>
-                  <Text fontSize="sm" color="whiteAlpha.700" minW="40px" textAlign="center">
+                  <Text
+                    fontSize="sm"
+                    color="whiteAlpha.700"
+                    minW="40px"
+                    textAlign="center"
+                  >
                     {Math.round(zoom * 100)}%
                   </Text>
                   <IconButton
@@ -466,8 +584,10 @@ export default function AppointmentDetails() {
                     size="sm"
                     bg="whiteAlpha.800"
                     color="gray.700"
-                    _hover={{ bg: "white" }}
-                    onClick={handleZoomOut}
+                    _hover={{ bg: 'white' }}
+                    onClick={() =>
+                      setZoom((z) => Math.max(z - 0.25, 0.5))
+                    }
                     aria-label="Zoom out"
                   >
                     <MdZoomOut size={20} />
@@ -478,7 +598,7 @@ export default function AppointmentDetails() {
                       size="sm"
                       bg="whiteAlpha.800"
                       color="gray.700"
-                      _hover={{ bg: "white" }}
+                      _hover={{ bg: 'white' }}
                       aria-label="Close"
                       ml={4}
                     >
@@ -509,7 +629,7 @@ export default function AppointmentDetails() {
           </Dialog.Root>
         )}
     </Stack>
-  );
+  )
 }
 
 function InfoRow({ icon: Icon, label, value }) {
@@ -522,8 +642,8 @@ function InfoRow({ icon: Icon, label, value }) {
         {label}
       </Text>
       <Text fontSize="sm" fontWeight="600" color="gray.700">
-        {value || "N/A"}
+        {value || 'N/A'}
       </Text>
     </Flex>
-  );
+  )
 }

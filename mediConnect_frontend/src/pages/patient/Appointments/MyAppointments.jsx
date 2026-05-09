@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
 import {
   Box,
   Stack,
-  Heading,
   Text,
   Flex,
   Badge,
@@ -12,7 +11,7 @@ import {
   Card,
   Avatar,
   Grid,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react'
 import {
   MdCalendarToday,
   MdCancel,
@@ -21,13 +20,14 @@ import {
   MdSearch,
   MdAccessTime,
   MdLocalHospital,
-  MdHistory,
-} from "react-icons/md";
-import Loader from "@/components/common/Loader";
-import PageHeader from "@/components/common/PageHeader";
-import EmptyState from "@/components/common/EmptyState";
-import * as appointmentSlice from "@/features/appointments/appointmentSlice";
-import * as appointmentSelectors from "@/features/appointments/appointmentSelectors";
+} from 'react-icons/md'
+import Loader from '@/components/common/Loader'
+import PageHeader from '@/components/common/PageHeader'
+import EmptyState from '@/components/common/EmptyState'
+import SearchInput from '@/components/common/SearchInput'
+import useDebounce from '@/hooks/useDebounce'
+import * as appointmentSlice from '@/features/appointments/appointmentSlice'
+import * as appointmentSelectors from '@/features/appointments/appointmentSelectors'
 
 const STATUS_COLOR = {
   confirmed: "green",
@@ -67,13 +67,15 @@ export default function MyAppointments() {
   const appointments = useSelector(appointmentSelectors.selectAppointments);
   const pagination = useSelector(appointmentSelectors.selectAppointmentsPagination);
   const loading = useSelector(appointmentSelectors.selectAppointmentsLoading);
-  const [filter, setFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const [cancellingId, setCancellingId] = useState(null);
+  const [filter, setFilter] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [cancellingId, setCancellingId] = useState(null)
+  const debouncedSearch = useDebounce(search, 400)
 
   useEffect(() => {
-    setPage(1);
-  }, [filter]);
+    setPage(1)
+  }, [filter, debouncedSearch])
 
   useEffect(() => {
     dispatch(
@@ -81,9 +83,10 @@ export default function MyAppointments() {
         page,
         limit: 10,
         ...(FILTER_TO_STATUS[filter] && { status: FILTER_TO_STATUS[filter] }),
+        ...(debouncedSearch && { search: debouncedSearch }),
       }),
-    );
-  }, [dispatch, filter, page]);
+    )
+  }, [dispatch, filter, page, debouncedSearch])
 
   if (loading) return <Loader />;
 
@@ -107,17 +110,6 @@ export default function MyAppointments() {
       <PageHeader
         title="My Appointments"
         subtitle="Track all your medical visits"
-        actions={[
-          <Button
-            key="history"
-            size="sm"
-            variant="outline"
-            colorPalette="teal"
-            onClick={() => navigate("/patient/appointments/history")}
-          >
-            <MdHistory /> History
-          </Button>,
-        ]}
       />
 
       {/* Summary filter tabs */}
@@ -153,6 +145,16 @@ export default function MyAppointments() {
         })}
       </Grid>
 
+      {/* Search */}
+      {(appointments.length > 0 || search) && (
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by doctor, hospital, or specialty…"
+          maxW="400px"
+        />
+      )}
+
       {/* Appointment list */}
       <Stack gap={4}>
         {appointments.map((a) => {
@@ -167,9 +169,10 @@ export default function MyAppointments() {
               shadow="sm"
               rounded="xl"
               borderLeft="4px solid"
-              borderColor={`${STATUS_COLOR[a.status] || "gray"}.400`}
-              _hover={{ shadow: "md" }}
+              borderColor={`${STATUS_COLOR[a.status] || 'gray'}.400`}
+              _hover={{ shadow: 'md', cursor: 'pointer' }}
               transition="all 0.2s"
+              onClick={() => navigate(`/patient/appointments/${a._id}`)}
             >
               <Card.Body p={{ base: 4, md: 5 }}>
                 <Flex
@@ -294,15 +297,35 @@ export default function MyAppointments() {
       {appointments.length === 0 && (
         <EmptyState
           icon={<MdCalendarToday size={36} />}
-          title={filter ? `No ${filter} appointments` : "No appointments yet"}
-          description={
-            filter
-              ? "Try selecting a different filter."
-              : "Find a doctor and book your first appointment."
+          title={
+            search
+              ? 'No matching appointments'
+              : filter
+                ? `No ${filter} appointments`
+                : 'No appointments yet'
           }
-          actionLabel={!filter ? "Find a Doctor" : undefined}
-          actionIcon={<MdSearch />}
-          onAction={!filter ? () => navigate("/patient/doctors") : undefined}
+          description={
+            search
+              ? 'Try a different search term.'
+              : filter
+                ? 'Try selecting a different filter.'
+                : 'Find a doctor and book your first appointment.'
+          }
+          actionLabel={
+            search
+              ? 'Clear Search'
+              : !filter
+                ? 'Find a Doctor'
+                : undefined
+          }
+          actionIcon={!search ? <MdSearch /> : undefined}
+          onAction={
+            search
+              ? () => setSearch('')
+              : !filter
+                ? () => navigate('/patient/doctors')
+                : undefined
+          }
         />
       )}
 

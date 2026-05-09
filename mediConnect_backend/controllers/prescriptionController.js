@@ -24,7 +24,7 @@ const getPrescriptions = async (req, res, next) => {
     const total = await Prescription.countDocuments(query);
     const prescriptions = await Prescription.find(query)
       .populate({ path: "appointmentId", populate: { path: "hospitalId", select: "name" } })
-      .populate("doctorId", "name")
+      .populate({ path: "doctorId", select: "name specialtyIds", populate: { path: "specialtyIds", select: "name" } })
       .populate("patientId", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)

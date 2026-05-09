@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
  * @param {string}      [subtitle]  - Secondary description text.
  * @param {string}      [backTo]    - Path for back navigation button.
  * @param {string}      [backLabel] - Label for back button (default: 'Back').
+ * @param {function}    [onBack]    - Custom back handler (overrides backTo).
  * @param {ReactNode[]} [actions]   - Array of action button elements rendered on the right.
  * @param {ReactNode}   [children]  - Extra content rendered below the header row.
  */
@@ -17,6 +18,7 @@ export default function PageHeader({
   subtitle,
   backTo,
   backLabel = "Back",
+  onBack,
   actions,
   children,
 }) {
@@ -30,12 +32,12 @@ export default function PageHeader({
       gap={3}
     >
       <Flex align="center" gap={3}>
-        {backTo && (
+        {(backTo || onBack) && (
           <Button
             variant="ghost"
             colorPalette="teal"
             size="sm"
-            onClick={() => navigate(backTo)}
+            onClick={onBack || (() => navigate(backTo))}
           >
             <MdArrowBack /> {backLabel}
           </Button>

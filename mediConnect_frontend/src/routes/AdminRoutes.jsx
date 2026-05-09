@@ -3,31 +3,17 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import { USER_ROLES } from "../constants/roles";
 
-// Lazy load admin components
+// Admin components
 const AdminDashboard = React.lazy(() => import("../pages/admin/Dashboard"));
-const HospitalList = React.lazy(
-  () => import("../pages/admin/Hospitals/HospitalList"),
-);
-const HospitalDetail = React.lazy(
-  () => import("../pages/admin/Hospitals/HospitalDetail"),
-);
-const AddHospital = React.lazy(
-  () => import("../pages/admin/Hospitals/AddHospital"),
-);
-const EditHospital = React.lazy(
-  () => import("../pages/admin/Hospitals/EditHospital"),
-);
-const UserList = React.lazy(() => import("../pages/admin/Users/UserList"));
-const UserDetail = React.lazy(() => import("../pages/admin/Users/UserDetail"));
-const SpecialtyList = React.lazy(
-  () => import("../pages/admin/Specialties/SpecialtyList"),
-);
-const AddSpecialty = React.lazy(
-  () => import("../pages/admin/Specialties/AddSpecialty"),
-);
-const ReviewModeration = React.lazy(
-  () => import("../pages/admin/Reviews/ReviewModeration"),
-);
+import HospitalList from "../pages/admin/Hospitals/HospitalList";
+import HospitalDetail from "../pages/admin/Hospitals/HospitalDetail";
+import AddHospital from "../pages/admin/Hospitals/AddHospital";
+import EditHospital from "../pages/admin/Hospitals/EditHospital";
+import UserList from "../pages/admin/Users/UserList";
+import UserDetail from "../pages/admin/Users/UserDetail";
+import SpecialtyList from "../pages/admin/Specialties/SpecialtyList";
+import AddSpecialty from "../pages/admin/Specialties/AddSpecialty";
+import ReviewModeration from "../pages/admin/Reviews/ReviewModeration";
 
 const AdminRoutes = () => {
   return (

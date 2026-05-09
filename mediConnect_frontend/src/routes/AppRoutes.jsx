@@ -11,75 +11,39 @@ const Register = lazy(() => import("@/pages/auth/Register"));
 
 // ─── Super Admin ──────────────────────────────────────────────────────────────
 const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
-const HospitalList = lazy(() => import("@/pages/admin/Hospitals/HospitalList"));
-const HospitalDetail = lazy(
-  () => import("@/pages/admin/Hospitals/HospitalDetail"),
-);
-const AddHospital = lazy(() => import("@/pages/admin/Hospitals/AddHospital"));
-const EditHospital = lazy(() => import("@/pages/admin/Hospitals/EditHospital"));
-const UserList = lazy(() => import("@/pages/admin/Users/UserList"));
-const UserDetail = lazy(() => import("@/pages/admin/Users/UserDetail"));
-const SpecialtyList = lazy(
-  () => import("@/pages/admin/Specialties/SpecialtyList"),
-);
-const ReviewModeration = lazy(
-  () => import("@/pages/admin/Reviews/ReviewModeration"),
-);
+import HospitalList from "@/pages/admin/Hospitals/HospitalList";
+import HospitalDetail from "@/pages/admin/Hospitals/HospitalDetail";
+import AddHospital from "@/pages/admin/Hospitals/AddHospital";
+import EditHospital from "@/pages/admin/Hospitals/EditHospital";
+import UserList from "@/pages/admin/Users/UserList";
+import UserDetail from "@/pages/admin/Users/UserDetail";
+import SpecialtyList from "@/pages/admin/Specialties/SpecialtyList";
+import ReviewModeration from "@/pages/admin/Reviews/ReviewModeration";
 
 // ─── Hospital Admin ───────────────────────────────────────────────────────────
 const HospitalDashboard = lazy(() => import("@/pages/hospital/Dashboard"));
-const HospitalProfile = lazy(
-  () => import("@/pages/hospital/Profile/HospitalProfile"),
-);
-const DoctorList = lazy(() => import("@/pages/hospital/Doctors/DoctorList"));
-const AddDoctor = lazy(() => import("@/pages/hospital/Doctors/AddDoctor"));
-const EditDoctor = lazy(() => import("@/pages/hospital/Doctors/EditDoctor"));
-const DoctorDetail = lazy(
-  () => import("@/pages/hospital/Doctors/DoctorDetail"),
-);
-const ScheduleList = lazy(
-  () => import("@/pages/hospital/Schedules/ScheduleList"),
-);
-const ManageSlots = lazy(
-  () => import("@/pages/hospital/Schedules/ManageSlots"),
-);
-const HospAppointmentList = lazy(
-  () => import("@/pages/hospital/Appointments/AppointmentList"),
-);
-const AppointmentDetails = lazy(
-  () => import("@/pages/hospital/Appointments/AppointmentDetails"),
-);
-const UploadPrescription = lazy(
-  () => import("@/pages/hospital/Prescriptions/UploadPrescription"),
-);
+import HospitalProfile from "@/pages/hospital/Profile/HospitalProfile";
+import DoctorList from "@/pages/hospital/Doctors/DoctorList";
+import AddDoctor from "@/pages/hospital/Doctors/AddDoctor";
+import EditDoctor from "@/pages/hospital/Doctors/EditDoctor";
+import DoctorDetail from "@/pages/hospital/Doctors/DoctorDetail";
+import ScheduleList from "@/pages/hospital/Schedules/ScheduleList";
+import ManageSlots from "@/pages/hospital/Schedules/ManageSlots";
+import HospAppointmentList from "@/pages/hospital/Appointments/AppointmentList";
+import AppointmentDetails from "@/pages/hospital/Appointments/AppointmentDetails";
+import UploadPrescription from "@/pages/hospital/Prescriptions/UploadPrescription";
 
 // ─── Patient ──────────────────────────────────────────────────────────────────
 const PatientHome = lazy(() => import("@/pages/patient/Home"));
-const PatientProfile = lazy(
-  () => import("@/pages/patient/Profile/PatientProfile"),
-);
-const SearchHospitals = lazy(
-  () => import("@/pages/patient/Search/SearchHospitals"),
-);
-const SearchDoctors = lazy(
-  () => import("@/pages/patient/Search/SearchDoctors"),
-);
-const DoctorProfile = lazy(
-  () => import("@/pages/patient/Search/DoctorProfile"),
-);
-const BookAppointment = lazy(
-  () => import("@/pages/patient/Appointments/BookAppointment"),
-);
-const MyAppointments = lazy(
-  () => import("@/pages/patient/Appointments/MyAppointments"),
-);
-const AppointmentHistory = lazy(
-  () => import("@/pages/patient/Appointments/AppointmentHistory"),
-);
-const MyPrescriptions = lazy(
-  () => import("@/pages/patient/Prescriptions/MyPrescriptions"),
-);
-const SubmitReview = lazy(() => import("@/pages/patient/Reviews/SubmitReview"));
+import PatientProfile from "@/pages/patient/Profile/PatientProfile";
+import SearchHospitals from "@/pages/patient/Search/SearchHospitals";
+import SearchDoctors from "@/pages/patient/Search/SearchDoctors";
+import DoctorProfile from "@/pages/patient/Search/DoctorProfile";
+import BookAppointment from "@/pages/patient/Appointments/BookAppointment";
+import MyAppointments from "@/pages/patient/Appointments/MyAppointments";
+import PatientAppointmentDetails from "@/pages/patient/Appointments/AppointmentDetails";
+import MyPrescriptions from "@/pages/patient/Prescriptions/MyPrescriptions";
+import SubmitReview from "@/pages/patient/Reviews/SubmitReview";
 
 export default function AppRoutes() {
   return (
@@ -156,8 +120,8 @@ export default function AppRoutes() {
             />
             <Route path="/patient/appointments" element={<MyAppointments />} />
             <Route
-              path="/patient/appointments/history"
-              element={<AppointmentHistory />}
+              path="/patient/appointments/:id"
+              element={<PatientAppointmentDetails />}
             />
             <Route
               path="/patient/prescriptions"

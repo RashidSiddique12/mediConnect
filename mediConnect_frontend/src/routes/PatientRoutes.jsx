@@ -3,38 +3,20 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import { USER_ROLES } from "../constants/roles";
 
-// Lazy load patient components
+// Patient components
 const PatientHome = React.lazy(() => import("../pages/patient/Home"));
 const PatientProfile = React.lazy(
   () => import("../pages/patient/Profile/PatientProfile"),
 );
-const SearchHospitals = React.lazy(
-  () => import("../pages/patient/Search/SearchHospitals"),
-);
-const SearchDoctors = React.lazy(
-  () => import("../pages/patient/Search/SearchDoctors"),
-);
-const DoctorProfile = React.lazy(
-  () => import("../pages/patient/Search/DoctorProfile"),
-);
-const BookAppointment = React.lazy(
-  () => import("../pages/patient/Appointments/BookAppointment"),
-);
-const MyAppointments = React.lazy(
-  () => import("../pages/patient/Appointments/MyAppointments"),
-);
-const AppointmentHistory = React.lazy(
-  () => import("../pages/patient/Appointments/AppointmentHistory"),
-);
-const MyPrescriptions = React.lazy(
-  () => import("../pages/patient/Prescriptions/MyPrescriptions"),
-);
-const UploadDocuments = React.lazy(
-  () => import("../pages/patient/Prescriptions/UploadDocuments"),
-);
-const SubmitReview = React.lazy(
-  () => import("../pages/patient/Reviews/SubmitReview"),
-);
+import SearchHospitals from "../pages/patient/Search/SearchHospitals";
+import SearchDoctors from "../pages/patient/Search/SearchDoctors";
+import DoctorProfile from "../pages/patient/Search/DoctorProfile";
+import BookAppointment from "../pages/patient/Appointments/BookAppointment";
+import MyAppointments from "../pages/patient/Appointments/MyAppointments";
+import PatientAppointmentDetails from "../pages/patient/Appointments/AppointmentDetails";
+import MyPrescriptions from "../pages/patient/Prescriptions/MyPrescriptions";
+import UploadDocuments from "../pages/patient/Prescriptions/UploadDocuments";
+import SubmitReview from "../pages/patient/Reviews/SubmitReview";
 
 const PatientRoutes = () => {
   return (
@@ -54,7 +36,7 @@ const PatientRoutes = () => {
         {/* Appointments */}
         <Route path="book/:doctorId" element={<BookAppointment />} />
         <Route path="appointments" element={<MyAppointments />} />
-        <Route path="appointments/history" element={<AppointmentHistory />} />
+        <Route path="appointments/:id" element={<PatientAppointmentDetails />} />
 
         {/* Prescriptions */}
         <Route path="prescriptions" element={<MyPrescriptions />} />

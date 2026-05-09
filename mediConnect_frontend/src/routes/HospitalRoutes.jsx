@@ -3,40 +3,20 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import { USER_ROLES } from "../constants/roles";
 
-// Lazy load hospital components
+// Hospital components
 const HospitalDashboard = React.lazy(
   () => import("../pages/hospital/Dashboard"),
 );
-const HospitalProfile = React.lazy(
-  () => import("../pages/hospital/Profile/HospitalProfile"),
-);
-const DoctorList = React.lazy(
-  () => import("../pages/hospital/Doctors/DoctorList"),
-);
-const AddDoctor = React.lazy(
-  () => import("../pages/hospital/Doctors/AddDoctor"),
-);
-const EditDoctor = React.lazy(
-  () => import("../pages/hospital/Doctors/EditDoctor"),
-);
-const DoctorDetail = React.lazy(
-  () => import("../pages/hospital/Doctors/DoctorDetail"),
-);
-const ScheduleList = React.lazy(
-  () => import("../pages/hospital/Schedules/ScheduleList"),
-);
-const ManageSlots = React.lazy(
-  () => import("../pages/hospital/Schedules/ManageSlots"),
-);
-const AppointmentList = React.lazy(
-  () => import("../pages/hospital/Appointments/AppointmentList"),
-);
-const AppointmentDetails = React.lazy(
-  () => import("../pages/hospital/Appointments/AppointmentDetails"),
-);
-const UploadPrescription = React.lazy(
-  () => import("../pages/hospital/Prescriptions/UploadPrescription"),
-);
+import HospitalProfile from "../pages/hospital/Profile/HospitalProfile";
+import DoctorList from "../pages/hospital/Doctors/DoctorList";
+import AddDoctor from "../pages/hospital/Doctors/AddDoctor";
+import EditDoctor from "../pages/hospital/Doctors/EditDoctor";
+import DoctorDetail from "../pages/hospital/Doctors/DoctorDetail";
+import ScheduleList from "../pages/hospital/Schedules/ScheduleList";
+import ManageSlots from "../pages/hospital/Schedules/ManageSlots";
+import AppointmentList from "../pages/hospital/Appointments/AppointmentList";
+import AppointmentDetails from "../pages/hospital/Appointments/AppointmentDetails";
+import UploadPrescription from "../pages/hospital/Prescriptions/UploadPrescription";
 
 const HospitalRoutes = () => {
   return (

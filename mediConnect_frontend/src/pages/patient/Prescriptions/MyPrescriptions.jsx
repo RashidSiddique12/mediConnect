@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   Box,
@@ -11,6 +12,9 @@ import {
   Button,
   Avatar,
   Icon,
+  Image,
+  Dialog,
+  IconButton,
 } from '@chakra-ui/react'
 import {
   MdDescription,
@@ -20,6 +24,13 @@ import {
   MdLocalHospital,
   MdNotes,
   MdOpenInNew,
+  MdVisibility,
+  MdImage,
+  MdPictureAsPdf,
+  MdZoomIn,
+  MdZoomOut,
+  MdClose,
+  MdArrowForward,
 } from 'react-icons/md'
 import Loader from '@/components/common/Loader'
 import PageHeader from '@/components/common/PageHeader'
@@ -38,7 +49,18 @@ function formatDate(dateStr) {
   })
 }
 
+function isImage(url) {
+  return /\.(jpe?g|png|gif|webp)$/i.test(url || '')
+}
+
+function fileType(url) {
+  if (isImage(url)) return 'Image'
+  if (/\.pdf$/i.test(url || '')) return 'PDF'
+  return 'File'
+}
+
 export default function MyPrescriptions() {
+  const navigate = useNavigate()
   const dispatch = useDispatch()
   const prescriptions = useSelector(prescriptionSelectors.selectPrescriptions)
   const pagination = useSelector(
@@ -51,6 +73,8 @@ export default function MyPrescriptions() {
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebounce(search, 400)
   const initialLoad = useRef(true)
+  const [lightboxUrl, setLightboxUrl] = useState(null)
+  const [zoom, setZoom] = useState(1)
 
   useEffect(() => {
     setPage(1)
@@ -182,13 +206,30 @@ export default function MyPrescriptions() {
                       Prescription
                     </Text>
                     <Text opacity={0.8} fontSize="xs">
-                      {formatDate(rx.createdAt)}
+                      Uploaded {formatDate(rx.createdAt)}
                     </Text>
                   </Box>
                 </Flex>
-                <Badge bg="whiteAlpha.300" color="white" size="sm">
-                  #{rx._id?.slice(-6).toUpperCase()}
-                </Badge>
+                <Flex gap={2} align="center">
+                  <Badge
+                    bg="whiteAlpha.300"
+                    color="white"
+                    size="sm"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                  >
+                    {isImage(rx.fileUrl) ? (
+                      <MdImage size={12} />
+                    ) : (
+                      <MdPictureAsPdf size={12} />
+                    )}
+                    {fileType(rx.fileUrl)}
+                  </Badge>
+                  <Badge bg="whiteAlpha.300" color="white" size="sm">
+                    #{rx._id?.slice(-6).toUpperCase()}
+                  </Badge>
+                </Flex>
               </Flex>
             </Box>
 
@@ -200,13 +241,65 @@ export default function MyPrescriptions() {
                 </Avatar.Root>
                 <Box flex={1}>
                   <Text fontWeight="600" fontSize="sm">
-                    Dr. {rx.doctorId?.name || 'Unknown'}
+                    {rx.doctorId?.name || 'Unknown Doctor'}
                   </Text>
-                  <Text fontSize="xs" color="gray.500">
-                    Prescribing Physician
-                  </Text>
+                  {rx.doctorId?.specialtyIds?.length > 0 ? (
+                    <Flex gap={1} wrap="wrap" mt={0.5}>
+                      {rx.doctorId.specialtyIds.map((s, i) => (
+                        <Badge
+                          key={i}
+                          colorPalette="teal"
+                          size="xs"
+                          variant="outline"
+                        >
+                          {s.name || s}
+                        </Badge>
+                      ))}
+                    </Flex>
+                  ) : (
+                    <Text fontSize="xs" color="gray.500">
+                      Prescribing Physician
+                    </Text>
+                  )}
                 </Box>
               </Flex>
+
+              {/* Prescription preview */}
+              {rx.fileUrl && isImage(rx.fileUrl) && (
+                <Box
+                  mb={4}
+                  rounded="lg"
+                  overflow="hidden"
+                  border="1px solid"
+                  borderColor="gray.200"
+                  cursor="pointer"
+                  onClick={() => {
+                    setZoom(1)
+                    setLightboxUrl(rx.fileUrl)
+                  }}
+                  position="relative"
+                  _hover={{ '& > div': { opacity: 1 } }}
+                >
+                  <Image
+                    src={rx.fileUrl}
+                    alt="Prescription"
+                    maxH="180px"
+                    w="100%"
+                    objectFit="cover"
+                  />
+                  <Flex
+                    position="absolute"
+                    inset={0}
+                    bg="blackAlpha.400"
+                    align="center"
+                    justify="center"
+                    opacity={0}
+                    transition="opacity 0.2s"
+                  >
+                    <MdZoomIn size={28} color="white" />
+                  </Flex>
+                </Box>
+              )}
 
               {/* Appointment details */}
               {rx.appointmentId && (
@@ -270,32 +363,47 @@ export default function MyPrescriptions() {
               )}
 
               {/* Actions */}
-              <Flex gap={2}>
+              <Flex gap={2} wrap="wrap">
                 <Button
                   flex={1}
                   variant="outline"
                   colorPalette="teal"
                   size="sm"
-                  asChild
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(rx.fileUrl)
+                      const blob = await res.blob()
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      const ext = rx.fileUrl.match(/\.\w+$/)?.[0] || ''
+                      a.download = `prescription-${rx._id?.slice(-6)}${ext}`
+                      document.body.appendChild(a)
+                      a.click()
+                      a.remove()
+                      URL.revokeObjectURL(url)
+                    } catch {
+                      window.open(rx.fileUrl, '_blank')
+                    }
+                  }}
                 >
-                  <a
-                    href={rx.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <MdDownload /> Download File
+                </Button>
+                {rx.appointmentId?._id && (
+                  <Button
+                    flex={1}
+                    colorPalette="teal"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate(
+                        `/patient/appointments/${rx.appointmentId._id}`,
+                      )
+                    }
                   >
-                    <MdOpenInNew /> View File
-                  </a>
-                </Button>
-                <Button
-                  flex={1}
-                  colorPalette="teal"
-                  size="sm"
-                  asChild
-                >
-                  <a href={rx.fileUrl} download>
-                    <MdDownload /> Download
-                  </a>
-                </Button>
+                    <MdVisibility /> View Appointment
+                  </Button>
+                )}
               </Flex>
             </Card.Body>
           </Card.Root>
@@ -304,29 +412,120 @@ export default function MyPrescriptions() {
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <Flex justify="center" align="center" gap={3} mt={2}>
-          <Button
-            size="sm"
-            variant="outline"
-            colorPalette="teal"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Previous
-          </Button>
-          <Text fontSize="sm" color="gray.600" fontWeight="500">
-            Page {page} of {pagination.totalPages}
+        <Flex justify="center" align="center" gap={3} mt={2} direction="column">
+          <Text fontSize="xs" color="gray.400">
+            Showing {(page - 1) * 10 + 1}–
+            {Math.min(page * 10, pagination.total)} of {pagination.total}
           </Text>
-          <Button
-            size="sm"
-            variant="outline"
-            colorPalette="teal"
-            disabled={page >= pagination.totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </Button>
+          <Flex gap={3} align="center">
+            <Button
+              size="sm"
+              variant="outline"
+              colorPalette="teal"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Previous
+            </Button>
+            <Text fontSize="sm" color="gray.600" fontWeight="500">
+              Page {page} of {pagination.totalPages}
+            </Text>
+            <Button
+              size="sm"
+              variant="outline"
+              colorPalette="teal"
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </Flex>
         </Flex>
+      )}
+
+      {/* Image Lightbox */}
+      {lightboxUrl && (
+        <Dialog.Root
+          open={!!lightboxUrl}
+          onOpenChange={(e) => {
+            if (!e.open) setLightboxUrl(null)
+          }}
+          size="cover"
+        >
+          <Dialog.Backdrop bg="blackAlpha.800" />
+          <Dialog.Positioner>
+            <Dialog.Content
+              bg="transparent"
+              shadow="none"
+              maxW="95vw"
+              maxH="95vh"
+            >
+              <Flex justify="center" align="center" gap={3} py={3}>
+                <IconButton
+                  rounded="full"
+                  size="sm"
+                  bg="whiteAlpha.800"
+                  color="gray.700"
+                  _hover={{ bg: 'white' }}
+                  onClick={() => setZoom((z) => Math.min(z + 0.25, 3))}
+                  aria-label="Zoom in"
+                >
+                  <MdZoomIn size={20} />
+                </IconButton>
+                <Text
+                  fontSize="sm"
+                  color="whiteAlpha.700"
+                  minW="40px"
+                  textAlign="center"
+                >
+                  {Math.round(zoom * 100)}%
+                </Text>
+                <IconButton
+                  rounded="full"
+                  size="sm"
+                  bg="whiteAlpha.800"
+                  color="gray.700"
+                  _hover={{ bg: 'white' }}
+                  onClick={() => setZoom((z) => Math.max(z - 0.25, 0.5))}
+                  aria-label="Zoom out"
+                >
+                  <MdZoomOut size={20} />
+                </IconButton>
+                <Dialog.CloseTrigger asChild>
+                  <IconButton
+                    rounded="full"
+                    size="sm"
+                    bg="whiteAlpha.800"
+                    color="gray.700"
+                    _hover={{ bg: 'white' }}
+                    aria-label="Close"
+                    ml={4}
+                  >
+                    <MdClose size={20} />
+                  </IconButton>
+                </Dialog.CloseTrigger>
+              </Flex>
+              <Flex
+                justify="center"
+                align="center"
+                w="100%"
+                h="90vh"
+                overflow="auto"
+              >
+                <Image
+                  src={lightboxUrl}
+                  alt="Prescription"
+                  maxW="90vw"
+                  maxH="85vh"
+                  objectFit="contain"
+                  transform={`scale(${zoom})`}
+                  transition="transform 0.2s ease"
+                  rounded="md"
+                />
+              </Flex>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Dialog.Root>
       )}
     </Stack>
   )

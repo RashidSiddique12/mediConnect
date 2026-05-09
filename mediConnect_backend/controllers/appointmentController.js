@@ -66,8 +66,13 @@ const getAppointmentById = async (req, res, next) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
       .populate("patientId", "name email phone")
-      .populate("hospitalId", "name address phone")
-      .populate("doctorId", "name specialtyIds consultationFee");
+      .populate("hospitalId", "name address phone email")
+      .populate({
+        path: "doctorId",
+        select:
+          "name specialtyIds consultationFee email phone experience qualification gender languages consultationTypes",
+        populate: { path: "specialtyIds", select: "name" },
+      });
 
     if (!appointment) {
       return res
