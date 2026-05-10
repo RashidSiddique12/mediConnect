@@ -195,6 +195,11 @@ router.patch("/:id/cancel", auth, cancelAppointment);
  *       404:
  *         description: Prescription not found
  */
-router.get("/:appointmentId/prescription", auth, getPrescriptionByAppointment);
+router.get(
+  "/:appointmentId/prescription",
+  auth,
+  roleCheck("hospital_admin", "patient"),
+  getPrescriptionByAppointment,
+);
 
 module.exports = router;

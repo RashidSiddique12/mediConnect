@@ -37,7 +37,7 @@ export default function PageHeader({
             variant="ghost"
             colorPalette="teal"
             size="sm"
-            onClick={onBack || (() => navigate(backTo))}
+            onClick={(() => navigate(-1))}
           >
             <MdArrowBack /> {backLabel}
           </Button>

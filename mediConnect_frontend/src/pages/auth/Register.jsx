@@ -105,8 +105,8 @@ export default function Register() {
       setLocalError("Passwords do not match.");
       return;
     }
-    if (form.password.length < 8) {
-      setLocalError("Password must be at least 8 characters.");
+    if (form.password.length < 6) {
+      setLocalError("Password must be at least 6 characters.");
       return;
     }
     const { confirmPassword, ...payload } = form;
@@ -342,6 +342,7 @@ export default function Register() {
                         placeholder="John Doe"
                         value={form.name}
                         onChange={handleChange}
+                        autoComplete="name"
                         {...inputStyles}
                       />
                     </Box>
@@ -373,6 +374,7 @@ export default function Register() {
                         placeholder="+1-555-0100"
                         value={form.phone}
                         onChange={handleChange}
+                        autoComplete="tel"
                         {...inputStyles}
                       />
                     </Box>
@@ -401,6 +403,7 @@ export default function Register() {
                       placeholder="you@example.com"
                       value={form.email}
                       onChange={handleChange}
+                      autoComplete="email"
                       {...inputStyles}
                     />
                   </Box>
@@ -420,6 +423,7 @@ export default function Register() {
                       type="date"
                       value={form.dob}
                       onChange={handleChange}
+                      autoComplete="bday"
                       {...inputStyles}
                     />
                   </Field.Root>
@@ -447,13 +451,15 @@ export default function Register() {
                       >
                         <Select.ValueText placeholder="Select" />
                       </Select.Trigger>
-                      <Select.Content>
-                        {genders.items.map((item) => (
-                          <Select.Item key={item.value} item={item}>
-                            {item.label}
-                          </Select.Item>
-                        ))}
-                      </Select.Content>
+                      <Select.Positioner>
+                        <Select.Content>
+                          {genders.items.map((item) => (
+                            <Select.Item key={item.value} item={item}>
+                              {item.label}
+                            </Select.Item>
+                          ))}
+                        </Select.Content>
+                      </Select.Positioner>
                     </Select.Root>
                   </Field.Root>
                 </SimpleGrid>
@@ -482,9 +488,10 @@ export default function Register() {
                         name="password"
                         type="password"
                         pl={10}
-                        placeholder="Min. 8 chars"
+                        placeholder="Min. 6 chars"
                         value={form.password}
                         onChange={handleChange}
+                        autoComplete="new-password"
                         {...inputStyles}
                       />
                     </Box>
@@ -516,6 +523,7 @@ export default function Register() {
                         placeholder="Repeat"
                         value={form.confirmPassword}
                         onChange={handleChange}
+                        autoComplete="new-password"
                         {...inputStyles}
                       />
                     </Box>

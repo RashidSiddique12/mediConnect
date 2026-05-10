@@ -96,6 +96,7 @@ export default function BookAppointment() {
   const loading = useSelector(doctorSelectors.selectDoctorsLoading);
   const bookingLoading = useSelector(appointmentSelectors.selectBookingLoading);
   const booked = useSelector(appointmentSelectors.selectBooked);
+  const bookingError = useSelector(appointmentSelectors.selectAppointmentsError);
 
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -144,7 +145,7 @@ export default function BookAppointment() {
         hospitalId: hospital?._id || hospital,
         appointmentDate: toDateKey(selectedSchedule.date),
         timeSlot: selectedSlot,
-        notes,
+        reason: notes,
       }),
     );
   };
@@ -490,6 +491,12 @@ export default function BookAppointment() {
                 {notes.length}/500 characters
               </Text>
             </Field.Root>
+
+            {bookingError && (
+              <Text color="red.500" fontSize="sm" fontWeight="600">
+                {bookingError}
+              </Text>
+            )}
 
             <Button
               w="full"

@@ -1,6 +1,6 @@
 import { takeLatest, call, put } from "redux-saga/effects";
 import * as authSlice from "./authSlice";
-import { loginUser, updateProfile } from "@/services/api";
+import { loginUser, registerUser, updateProfile } from "@/services/api";
 
 const ROLE_ROUTES = {
   super_admin: "/admin",
@@ -30,7 +30,7 @@ function* handleLogin(action) {
 
 function* handleRegister(action) {
   try {
-    // Mock register — in real app call registerUser API
+    yield call(registerUser, action.payload);
     yield put(authSlice.registerSuccess());
     window.location.href = "/login";
   } catch (error) {

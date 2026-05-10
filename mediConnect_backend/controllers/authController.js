@@ -9,7 +9,7 @@ const { success, created } = require("../utils/apiResponse");
 // POST /api/v1/auth/register
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, dob, gender } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -23,6 +23,8 @@ const register = async (req, res, next) => {
       email,
       password,
       phone,
+      dob,
+      gender,
       role: "patient",
     });
 

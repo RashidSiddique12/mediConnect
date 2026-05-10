@@ -369,22 +369,21 @@ export default function MyPrescriptions() {
                   variant="outline"
                   colorPalette="teal"
                   size="sm"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch(rx.fileUrl)
-                      const blob = await res.blob()
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      const ext = rx.fileUrl.match(/\.\w+$/)?.[0] || ''
-                      a.download = `prescription-${rx._id?.slice(-6)}${ext}`
-                      document.body.appendChild(a)
-                      a.click()
-                      a.remove()
-                      URL.revokeObjectURL(url)
-                    } catch {
-                      window.open(rx.fileUrl, '_blank')
+                  onClick={() => {
+                    const url = rx.fileUrl
+                    if (!url) return
+                    // Add fl_attachment to Cloudinary URL to force browser download
+                    let dlUrl = url
+                    if (url.includes('/upload/')) {
+                      dlUrl = url.replace('/upload/', '/upload/fl_attachment/')
                     }
+                    const a = document.createElement('a')
+                    a.href = dlUrl
+                    a.target = '_blank'
+                    a.rel = 'noopener noreferrer'
+                    document.body.appendChild(a)
+                    a.click()
+                    a.remove()
                   }}
                 >
                   <MdDownload /> Download File

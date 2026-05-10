@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
+const roleCheck = require("../middleware/roleCheck");
 const {
   getAppointmentsByPatient,
 } = require("../controllers/appointmentController");
@@ -61,6 +62,11 @@ router.get("/:patientId/appointments", auth, getAppointmentsByPatient);
  *       200:
  *         description: List of patient prescriptions
  */
-router.get("/:patientId/prescriptions", auth, getPrescriptionsByPatient);
+router.get(
+  "/:patientId/prescriptions",
+  auth,
+  roleCheck("hospital_admin", "patient"),
+  getPrescriptionsByPatient,
+);
 
 module.exports = router;

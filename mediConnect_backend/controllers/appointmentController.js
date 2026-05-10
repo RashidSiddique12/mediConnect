@@ -92,18 +92,34 @@ const createAppointment = async (req, res, next) => {
     const { doctorId, hospitalId, appointmentDate, timeSlot, reason } =
       req.body;
 
-    // Check for double booking
-    const existing = await Appointment.findOne({
+    // Check if slot is already booked for this doctor
+    const existingSlot = await Appointment.findOne({
       doctorId,
       appointmentDate: new Date(appointmentDate),
       timeSlot,
-      status: { $ne: "cancelled" },
+      status: { $ne: 'cancelled' },
     });
 
-    if (existing) {
+    if (existingSlot) {
       return res
         .status(409)
-        .json({ success: false, message: "This time slot is already booked." });
+        .json({ success: false, message: 'This time slot is already booked.' });
+    }
+
+    // Prevent same patient from booking same doctor on same day
+    const patientDuplicate = await Appointment.findOne({
+      patientId: req.user._id,
+      doctorId,
+      appointmentDate: new Date(appointmentDate),
+      status: { $ne: 'cancelled' },
+    });
+
+    if (patientDuplicate) {
+      return res.status(409).json({
+        success: false,
+        message:
+          'You already have an appointment with this doctor on the selected date.',
+      });
     }
 
     const appointment = await Appointment.create({
@@ -116,12 +132,18 @@ const createAppointment = async (req, res, next) => {
     });
 
     const populated = await Appointment.findById(appointment._id)
-      .populate("patientId", "name email phone")
-      .populate("hospitalId", "name")
-      .populate("doctorId", "name");
+      .populate('patientId', 'name email phone')
+      .populate('hospitalId', 'name')
+      .populate('doctorId', 'name');
 
-    created(res, populated, "Appointment booked successfully");
+    created(res, populated, 'Appointment booked successfully');
   } catch (error) {
+    // Handle race condition: unique index violation
+    if (error.code === 11000) {
+      return res
+        .status(409)
+        .json({ success: false, message: 'This time slot is already booked.' });
+    }
     next(error);
   }
 };

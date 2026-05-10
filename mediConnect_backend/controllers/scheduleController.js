@@ -115,8 +115,30 @@ const getSchedulesByDoctor = async (req, res, next) => {
       if (req.query.from) filter.date.$gte = new Date(req.query.from);
       if (req.query.to) filter.date.$lte = new Date(req.query.to);
     }
-    const schedules = await Schedule.find(filter).sort({ date: 1 });
-    success(res, schedules);
+    const schedules = await Schedule.find(filter).sort({ date: 1 }).lean();
+
+    // Attach booked slots for each schedule date
+    const schedulesWithBookedSlots = await Promise.all(
+      schedules.map(async (schedule) => {
+        const startOfDay = new Date(schedule.date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(schedule.date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const bookedAppointments = await Appointment.find({
+          doctorId: req.params.doctorId,
+          appointmentDate: { $gte: startOfDay, $lte: endOfDay },
+          status: { $ne: 'cancelled' },
+        }).select('timeSlot');
+
+        return {
+          ...schedule,
+          bookedSlots: bookedAppointments.map((a) => a.timeSlot),
+        };
+      }),
+    );
+
+    success(res, schedulesWithBookedSlots);
   } catch (error) {
     next(error);
   }

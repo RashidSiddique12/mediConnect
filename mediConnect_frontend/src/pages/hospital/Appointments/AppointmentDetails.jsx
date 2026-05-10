@@ -34,6 +34,9 @@ import {
   MdZoomIn,
   MdZoomOut,
   MdClose,
+  MdHistory,
+  MdInsertDriveFile,
+  MdOpenInNew,
 } from "react-icons/md";
 import PageHeader from "@/components/common/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
@@ -72,6 +75,7 @@ export default function AppointmentDetails() {
   const prescription = useSelector(selectCurrentPrescription);
   const [imageOpen, setImageOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.25, 3));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.5));
@@ -385,7 +389,7 @@ export default function AppointmentDetails() {
                       borderColor="gray.200"
                     />
                   )}
-                  <Flex justify="flex-end" mt={2}>
+                  <Flex justify="flex-end" mt={2} gap={2}>
                     <Button
                       size="xs"
                       variant="outline"
@@ -427,6 +431,96 @@ export default function AppointmentDetails() {
           )}
         </Card.Body>
       </Card.Root>
+
+      {/* ─── Prescription Version History ─── */}
+      {prescription?.history?.length > 0 && (
+        <Card.Root shadow="sm" rounded="xl">
+          <Card.Body>
+            <Flex
+              align="center"
+              justify="space-between"
+              cursor="pointer"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              <Flex align="center" gap={2}>
+                <MdHistory size={18} color="var(--chakra-colors-gray-500)" />
+                <Text fontWeight="600" fontSize="sm" color="gray.700">
+                  Version History ({prescription.history.length})
+                </Text>
+              </Flex>
+              <Text fontSize="xs" color="teal.600" fontWeight="500">
+                {showHistory ? "Hide" : "Show"}
+              </Text>
+            </Flex>
+
+            {showHistory && (
+              <Stack gap={3} mt={4}>
+                {[...prescription.history].reverse().map((entry, idx) => (
+                  <Flex
+                    key={idx}
+                    align="center"
+                    gap={3}
+                    bg="gray.50"
+                    rounded="lg"
+                    p={3}
+                  >
+                    {/\.(jpe?g|png)(\?.*)?$/i.test(entry.fileUrl) ? (
+                      <Image
+                        src={entry.fileUrl}
+                        alt={`Version ${prescription.history.length - idx}`}
+                        boxSize="45px"
+                        objectFit="cover"
+                        rounded="md"
+                      />
+                    ) : (
+                      <Box color="gray.400">
+                        <MdInsertDriveFile size={28} />
+                      </Box>
+                    )}
+                    <Box flex={1}>
+                      <Flex align="center" gap={2}>
+                        <Text fontSize="sm" fontWeight="600" color="gray.600">
+                          Version {prescription.history.length - idx}
+                        </Text>
+                        <Badge size="sm" colorPalette="gray">
+                          Replaced
+                        </Badge>
+                      </Flex>
+                      <Text fontSize="xs" color="gray.400">
+                        {formatDate(entry.changedAt)}
+                      </Text>
+                      {entry.updatedBy?.name && (
+                        <Text fontSize="xs" color="gray.500" mt={0.5}>
+                          Updated by: {entry.updatedBy.name}
+                        </Text>
+                      )}
+                      {entry.notes && (
+                        <Text fontSize="xs" color="gray.500" mt={0.5}>
+                          {entry.notes}
+                        </Text>
+                      )}
+                    </Box>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      colorPalette="teal"
+                      asChild
+                    >
+                      <a
+                        href={entry.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MdOpenInNew />
+                      </a>
+                    </Button>
+                  </Flex>
+                ))}
+              </Stack>
+            )}
+          </Card.Body>
+        </Card.Root>
+      )}
 
       {/* ─── Image Lightbox Modal ─── */}
       {prescription?.fileUrl &&

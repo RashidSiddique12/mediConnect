@@ -32,7 +32,7 @@ const {
  *       200:
  *         description: Paginated list of prescriptions
  */
-router.get("/", auth, getPrescriptions);
+router.get("/", auth, roleCheck("hospital_admin", "patient"), getPrescriptions);
 
 /**
  * @swagger
@@ -54,7 +54,7 @@ router.get("/", auth, getPrescriptions);
  *       404:
  *         description: Prescription not found
  */
-router.get("/:id", auth, getPrescriptionById);
+router.get("/:id", auth, roleCheck("hospital_admin", "patient"), getPrescriptionById);
 
 /**
  * @swagger

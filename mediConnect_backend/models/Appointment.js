@@ -42,10 +42,13 @@ const appointmentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Prevent double booking: same doctor, same date, same time slot
+// Prevent double booking: same doctor, same date, same time slot (only for active appointments)
 appointmentSchema.index(
   { doctorId: 1, appointmentDate: 1, timeSlot: 1 },
-  { unique: true },
+  {
+    unique: true,
+    partialFilterExpression: { status: { $in: ['booked', 'completed'] } },
+  },
 );
 
 module.exports = mongoose.model("Appointment", appointmentSchema);

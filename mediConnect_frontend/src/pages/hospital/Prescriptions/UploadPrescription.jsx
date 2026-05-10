@@ -19,7 +19,6 @@ import {
   MdCloudUpload,
   MdInsertDriveFile,
   MdOpenInNew,
-  MdHistory,
   MdWarning,
   MdCheckCircle,
   MdArrowBack,
@@ -77,7 +76,6 @@ export default function UploadPrescription() {
   const [preview, setPreview] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const pendingFormRef = useRef(null);
 
   const isEditMode = !!existingPrescription;
@@ -490,92 +488,6 @@ export default function UploadPrescription() {
         </Card.Body>
       </Card.Root>
 
-      {/* Version history */}
-      {isEditMode && existingPrescription.history?.length > 0 && (
-        <Card.Root shadow="sm" rounded="xl">
-          <Card.Body>
-            <Flex
-              align="center"
-              justify="space-between"
-              cursor="pointer"
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              <Flex align="center" gap={2}>
-                <MdHistory size={18} color="var(--chakra-colors-gray-500)" />
-                <Text fontWeight="600" fontSize="sm" color="gray.700">
-                  Version History ({existingPrescription.history.length})
-                </Text>
-              </Flex>
-              <Text fontSize="xs" color="teal.600" fontWeight="500">
-                {showHistory ? "Hide" : "Show"}
-              </Text>
-            </Flex>
-
-            {showHistory && (
-              <Stack gap={3} mt={4}>
-                {[...existingPrescription.history]
-                  .reverse()
-                  .map((entry, idx) => (
-                    <Flex
-                      key={idx}
-                      align="center"
-                      gap={3}
-                      bg="gray.50"
-                      rounded="lg"
-                      p={3}
-                    >
-                      {isImageUrl(entry.fileUrl) ? (
-                        <Image
-                          src={entry.fileUrl}
-                          alt={`Version ${existingPrescription.history.length - idx}`}
-                          boxSize="45px"
-                          objectFit="cover"
-                          rounded="md"
-                        />
-                      ) : (
-                        <Box color="gray.400">
-                          <MdInsertDriveFile size={28} />
-                        </Box>
-                      )}
-                      <Box flex={1}>
-                        <Flex align="center" gap={2}>
-                          <Text fontSize="sm" fontWeight="600" color="gray.600">
-                            Version {existingPrescription.history.length - idx}
-                          </Text>
-                          <Badge size="sm" colorPalette="gray">
-                            Replaced
-                          </Badge>
-                        </Flex>
-                        <Text fontSize="xs" color="gray.400">
-                          {formatDate(entry.changedAt)}
-                        </Text>
-                        {entry.notes && (
-                          <Text fontSize="xs" color="gray.500" mt={0.5}>
-                            {entry.notes}
-                          </Text>
-                        )}
-                      </Box>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        colorPalette="teal"
-                        asChild
-                      >
-                        <a
-                          href={entry.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <MdOpenInNew />
-                        </a>
-                      </Button>
-                    </Flex>
-                  ))}
-              </Stack>
-            )}
-          </Card.Body>
-        </Card.Root>
-      )}
     </Stack>
   );
 }
