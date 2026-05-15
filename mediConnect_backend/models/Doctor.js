@@ -41,6 +41,12 @@ const doctorSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    currency: {
+      type: String,
+      default: 'INR',
+      trim: true,
+      uppercase: true,
+    },
     qualification: {
       type: String,
       trim: true,

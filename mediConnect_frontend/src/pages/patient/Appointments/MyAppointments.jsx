@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import { formatCurrency } from '@/utils/currency'
 import {
   Box,
   Stack,
@@ -220,6 +221,25 @@ export default function MyAppointments() {
                     >
                       {a.status}
                     </Badge>
+                    {a.paymentStatus && a.paymentStatus !== 'not_required' && (
+                      <Badge
+                        colorPalette={
+                          a.paymentStatus === 'paid'
+                            ? 'green'
+                            : a.paymentStatus === 'refunded'
+                              ? 'orange'
+                              : 'yellow'
+                        }
+                        size="sm"
+                        variant="subtle"
+                      >
+                        {a.paymentStatus === 'paid'
+                          ? 'Paid'
+                          : a.paymentStatus === 'refunded'
+                            ? 'Refunded'
+                            : 'Payment Pending'}
+                      </Badge>
+                    )}
                     <Flex align="center" gap={1.5}>
                       <MdCalendarToday size={13} color="#718096" />
                       <Text fontSize="sm" fontWeight="600" color="gray.700">
@@ -234,7 +254,7 @@ export default function MyAppointments() {
                     </Flex>
                     {a.fee > 0 && (
                       <Text fontWeight="700" color="teal.600" fontSize="sm">
-                        ${a.fee}
+                        {formatCurrency(a.fee)}
                       </Text>
                     )}
                   </Flex>

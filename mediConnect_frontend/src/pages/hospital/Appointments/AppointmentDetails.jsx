@@ -149,6 +149,29 @@ export default function AppointmentDetails() {
                 >
                   {status}
                 </Badge>
+                {appointment.paymentStatus && appointment.paymentStatus !== 'not_required' && (
+                  <Badge
+                    colorPalette={
+                      appointment.paymentStatus === 'paid'
+                        ? 'green'
+                        : appointment.paymentStatus === 'refunded'
+                          ? 'orange'
+                          : 'yellow'
+                    }
+                    size="md"
+                    px={2}
+                    py={0.5}
+                    rounded="full"
+                    variant="subtle"
+                    mt={1}
+                  >
+                    {appointment.paymentStatus === 'paid'
+                      ? '✅ Paid'
+                      : appointment.paymentStatus === 'refunded'
+                        ? 'Refunded'
+                        : 'Payment Pending'}
+                  </Badge>
+                )}
                 <Flex align="center" gap={3} mt={2} color="gray.500">
                   <Flex align="center" gap={1}>
                     <MdCalendarToday size={14} />

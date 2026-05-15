@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from '@/utils/currency'
 import {
   Box,
   Grid,
@@ -212,7 +213,7 @@ export default function HospitalDashboard() {
                         Fee
                       </Text>
                       <Text fontWeight="700" fontSize="sm" color="teal.600">
-                        ${d.fee}
+                        {formatCurrency(d.fee, d.currency)}
                       </Text>
                     </Box>
                   </Flex>

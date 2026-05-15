@@ -9,6 +9,7 @@ import { watchAppointmentSaga } from "@/features/appointments/appointmentSaga";
 import { watchPrescriptionSaga } from "@/features/prescriptions/prescriptionSaga";
 import { watchReviewSaga } from "@/features/reviews/reviewSaga";
 import { watchScheduleSaga } from "@/features/schedules/scheduleSaga";
+import { watchPaymentSaga } from "@/features/payments/paymentSaga";
 
 export default function* rootSaga() {
   yield all([
@@ -22,5 +23,6 @@ export default function* rootSaga() {
     watchPrescriptionSaga(),
     watchReviewSaga(),
     watchScheduleSaga(),
+    watchPaymentSaga(),
   ]);
 }

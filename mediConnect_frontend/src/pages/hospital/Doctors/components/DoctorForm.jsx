@@ -377,7 +377,7 @@ export default function DoctorForm({
                   </Field.Root>
 
                   <Field.Root required>
-                    <Field.Label>Consultation Fee ($)</Field.Label>
+                    <Field.Label>Consultation Fee (₹)</Field.Label>
                     <Input
                       name="consultationFee"
                       type="number"

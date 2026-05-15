@@ -92,3 +92,11 @@ export const DASHBOARD_ENDPOINTS = {
   HOSPITAL_STATS: `${API_VERSION}/dashboard/hospital`,
   PATIENT_STATS: `${API_VERSION}/dashboard/patient`,
 };
+
+export const PAYMENT_ENDPOINTS = {
+  CREATE_ORDER: `${API_VERSION}/payments/create-order`,
+  VERIFY: `${API_VERSION}/payments/verify`,
+  REFUND: `${API_VERSION}/payments/refund`,
+  GET_BY_APPOINTMENT: (appointmentId) =>
+    `${API_VERSION}/payments/${appointmentId}`,
+};

@@ -198,19 +198,41 @@ export default function AppointmentList() {
         render: (_val, row) => {
           const Icon = STATUS_ICON[row.status];
           return (
-            <Badge
-              colorPalette={STATUS_COLOR[row.status] || "gray"}
-              size="sm"
-              variant="subtle"
-              px={2}
-              py={0.5}
-              rounded="full"
-            >
-              <Flex align="center" gap={1}>
-                {Icon && <Icon size={12} />}
-                {row.status}
-              </Flex>
-            </Badge>
+            <Stack gap={1}>
+              <Badge
+                colorPalette={STATUS_COLOR[row.status] || "gray"}
+                size="sm"
+                variant="subtle"
+                px={2}
+                py={0.5}
+                rounded="full"
+              >
+                <Flex align="center" gap={1}>
+                  {Icon && <Icon size={12} />}
+                  {row.status}
+                </Flex>
+              </Badge>
+              {row.paymentStatus && row.paymentStatus !== 'not_required' && (
+                <Badge
+                  colorPalette={
+                    row.paymentStatus === 'paid'
+                      ? 'green'
+                      : row.paymentStatus === 'refunded'
+                        ? 'orange'
+                        : 'yellow'
+                  }
+                  size="xs"
+                  variant="subtle"
+                  rounded="full"
+                >
+                  {row.paymentStatus === 'paid'
+                    ? 'Paid'
+                    : row.paymentStatus === 'refunded'
+                      ? 'Refunded'
+                      : 'Pending'}
+                </Badge>
+              )}
+            </Stack>
           );
         },
       },

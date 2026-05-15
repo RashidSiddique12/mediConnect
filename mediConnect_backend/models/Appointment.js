@@ -27,8 +27,8 @@ const appointmentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["booked", "completed", "cancelled"],
-      default: "booked",
+      enum: ['pending_payment', 'booked', 'completed', 'cancelled'],
+      default: 'pending_payment',
     },
     reason: {
       type: String,
@@ -37,6 +37,15 @@ const appointmentSchema = new mongoose.Schema(
     notes: {
       type: String,
       maxlength: 1000,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'refunded', 'not_required'],
+      default: 'pending',
+    },
+    paymentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Payment',
     },
   },
   { timestamps: true },
@@ -47,7 +56,7 @@ appointmentSchema.index(
   { doctorId: 1, appointmentDate: 1, timeSlot: 1 },
   {
     unique: true,
-    partialFilterExpression: { status: { $in: ['booked', 'completed'] } },
+    partialFilterExpression: { status: { $in: ['pending_payment', 'booked', 'completed'] } },
   },
 );
 

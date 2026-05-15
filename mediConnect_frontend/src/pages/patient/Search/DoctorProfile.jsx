@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { formatCurrency } from '@/utils/currency'
 import {
   Box,
   Stack,
@@ -145,7 +146,7 @@ export default function DoctorProfile() {
                     Consult Fee
                   </Text>
                   <Text fontWeight="700" color="orange.600">
-                    ${doctor.consultationFee || doctor.fee || 0}
+                    {formatCurrency(doctor.consultationFee || doctor.fee || 0, doctor.currency)}
                   </Text>
                 </Box>
                 <Box textAlign="center" bg="blue.50" rounded="xl" px={4} py={3}>

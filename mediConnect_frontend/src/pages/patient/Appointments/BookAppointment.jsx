@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { formatCurrency } from '@/utils/currency'
 import {
   Box,
   Stack,
@@ -31,6 +32,20 @@ import * as scheduleSlice from "@/features/schedules/scheduleSlice";
 import * as scheduleSelectors from "@/features/schedules/scheduleSelectors";
 import * as appointmentSlice from "@/features/appointments/appointmentSlice";
 import * as appointmentSelectors from "@/features/appointments/appointmentSelectors";
+import {
+  createOrderRequest,
+  verifyPaymentRequest,
+  resetPayment,
+} from "@/features/payments/paymentSlice";
+import {
+  selectPaymentOrder,
+  selectOrderLoading,
+  selectPaymentVerified,
+  selectPaymentVerifying,
+  selectPaymentError,
+} from "@/features/payments/paymentSelectors";
+import { selectUser } from "@/features/auth/authSelectors";
+import { loadRazorpayScript } from "@/utils/loadRazorpay";
 
 function toDateKey(d) {
   if (typeof d === "string") return d.split("T")[0];
@@ -98,6 +113,13 @@ export default function BookAppointment() {
   const booked = useSelector(appointmentSelectors.selectBooked);
   const bookingError = useSelector(appointmentSelectors.selectAppointmentsError);
 
+  const user = useSelector(selectUser);
+  const order = useSelector(selectPaymentOrder);
+  const orderLoading = useSelector(selectOrderLoading);
+  const verified = useSelector(selectPaymentVerified);
+  const verifying = useSelector(selectPaymentVerifying);
+  const paymentError = useSelector(selectPaymentError);
+
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [notes, setNotes] = useState("");
@@ -107,14 +129,63 @@ export default function BookAppointment() {
   useEffect(() => {
     dispatch(doctorSlice.fetchDoctorByIdRequest(doctorId));
     dispatch(scheduleSlice.fetchSchedulesRequest({ doctorId }));
-    return () => dispatch(appointmentSlice.resetBooking());
+    return () => {
+      dispatch(appointmentSlice.resetBooking());
+      dispatch(resetPayment());
+    };
   }, [dispatch, doctorId]);
 
+  // Open Razorpay checkout when order is ready
   useEffect(() => {
-    if (booked) {
+    if (!order) return;
+
+    const openRazorpay = async () => {
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        alert("Razorpay SDK failed to load. Check your connection.");
+        return;
+      }
+
+      const options = {
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "MediConnect",
+        description: `Consultation with Dr. ${order.doctor.name}`,
+        order_id: order.orderId,
+        handler: (response) => {
+          dispatch(
+            verifyPaymentRequest({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+              appointmentId: order.appointmentId,
+            }),
+          );
+        },
+        prefill: {
+          name: user?.name || "",
+          email: user?.email || "",
+          contact: user?.phone || "",
+        },
+        theme: {
+          color: "#0D9488",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    };
+
+    openRazorpay();
+  }, [order, dispatch, user]);
+
+  // Redirect on successful payment verification
+  useEffect(() => {
+    if (verified) {
       setTimeout(() => navigate("/patient/appointments"), 2500);
     }
-  }, [booked, navigate]);
+  }, [verified, navigate]);
 
   const upcomingSchedules = schedules
     .filter((s) => toDateKey(s.date) >= todayKey)
@@ -137,10 +208,10 @@ export default function BookAppointment() {
   const specialtyName =
     (doctor.specialtyIds || []).map((s) => s.name || s).join(", ") || "General";
 
-  const handleBook = () => {
-    if (!selectedSchedule || !selectedSlot || bookingLoading) return;
+  const handlePayAndBook = () => {
+    if (!selectedSchedule || !selectedSlot || orderLoading) return;
     dispatch(
-      appointmentSlice.bookAppointmentRequest({
+      createOrderRequest({
         doctorId,
         hospitalId: hospital?._id || hospital,
         appointmentDate: toDateKey(selectedSchedule.date),
@@ -150,7 +221,7 @@ export default function BookAppointment() {
     );
   };
 
-  if (booked)
+  if (verified)
     return (
       <Card.Root shadow="md" rounded="2xl" maxW="500px" mx="auto" mt={8}>
         <Card.Body py={12} textAlign="center">
@@ -164,8 +235,11 @@ export default function BookAppointment() {
             <MdCheckCircle />
           </Box>
           <Heading size="xl" color="teal.600" mb={2}>
-            Appointment Booked!
+            Payment Successful!
           </Heading>
+          <Text color="teal.500" fontWeight="600" mb={2}>
+            Appointment Booked
+          </Text>
           <Text color="gray.500" mb={1}>
             With{" "}
             <Text as="span" fontWeight="700">
@@ -232,7 +306,7 @@ export default function BookAppointment() {
                 Consultation Fee
               </Text>
               <Heading size="lg" color="white">
-                ${doctor.consultationFee || doctor.fee || 0}
+                {formatCurrency(doctor.consultationFee || doctor.fee || 0, doctor.currency)}
               </Heading>
             </Box>
           </Flex>
@@ -474,7 +548,7 @@ export default function BookAppointment() {
                     Consultation Fee
                   </Text>
                   <Text fontWeight="700" color="teal.600" fontSize="md">
-                    ${doctor.consultationFee || doctor.fee || 0}
+                    {formatCurrency(doctor.consultationFee || doctor.fee || 0, doctor.currency)}
                   </Text>
                 </Flex>
               </Stack>
@@ -492,9 +566,9 @@ export default function BookAppointment() {
               </Text>
             </Field.Root>
 
-            {bookingError && (
-              <Text color="red.500" fontSize="sm" fontWeight="600">
-                {bookingError}
+            {(bookingError || paymentError) && (
+              <Text color="red.500" fontSize="sm" fontWeight="600" mb={2}>
+                {bookingError || paymentError}
               </Text>
             )}
 
@@ -502,10 +576,16 @@ export default function BookAppointment() {
               w="full"
               colorPalette="teal"
               size="lg"
-              onClick={handleBook}
-              disabled={bookingLoading}
+              onClick={handlePayAndBook}
+              disabled={orderLoading || verifying}
             >
-              {bookingLoading ? <Spinner size="sm" /> : "Confirm Appointment"}
+              {orderLoading ? (
+                <><Spinner size="sm" /> Creating order...</>
+              ) : verifying ? (
+                <><Spinner size="sm" /> Verifying payment...</>
+              ) : (
+                `Pay ${formatCurrency(doctor.consultationFee || doctor.fee || 0, doctor.currency)} & Book`
+              )}
             </Button>
           </Card.Body>
         </Card.Root>

@@ -204,6 +204,7 @@ const getHospitalStats = async (req, res, next) => {
         name: d.name,
         specialty: d.specialtyIds?.[0]?.name || "General",
         fee: d.consultationFee || 0,
+        currency: d.currency || 'INR',
         experience: d.experience || 0,
       })),
     });

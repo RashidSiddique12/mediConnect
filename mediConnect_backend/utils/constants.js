@@ -16,4 +16,13 @@ const REVIEW_STATUS = {
   REJECTED: "rejected",
 };
 
-module.exports = { ROLES, APPOINTMENT_STATUS, REVIEW_STATUS };
+const CURRENCIES = {
+  INR: { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  USD: { code: 'USD', symbol: '$', name: 'US Dollar' },
+  EUR: { code: 'EUR', symbol: '€', name: 'Euro' },
+  GBP: { code: 'GBP', symbol: '£', name: 'British Pound' },
+}
+
+const DEFAULT_CURRENCY = 'INR'
+
+module.exports = { ROLES, APPOINTMENT_STATUS, REVIEW_STATUS, CURRENCIES, DEFAULT_CURRENCY };

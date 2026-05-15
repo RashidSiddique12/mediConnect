@@ -23,6 +23,7 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const patientRoutes = require("./routes/patientRoutes");
 const userRoutes = require("./routes/userRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 // Connect Database
 connectDB();
@@ -87,6 +88,7 @@ app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/patients", patientRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/payments", paymentRoutes);
 
 // Root route
 app.get("/", (req, res) => {
@@ -109,6 +111,9 @@ app.use((req, res) => {
 
 // Global Error Handler
 app.use(errorHandler);
+
+// Register cron jobs
+require("./cron");
 
 const PORT = env.PORT;
 app.listen(PORT, () => {

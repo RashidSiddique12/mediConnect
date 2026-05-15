@@ -124,6 +124,13 @@ export const cancelAppointment = (id) =>
 export const fetchPatientAppointments = (patientId, params) =>
   apiClient.get(`/patients/${patientId}/appointments`, { params });
 
+// Payments
+export const createPaymentOrder = (data) =>
+  apiClient.post('/payments/create-order', data)
+export const verifyPayment = (data) => apiClient.post('/payments/verify', data)
+export const fetchPaymentByAppointment = (appointmentId) =>
+  apiClient.get(`/payments/${appointmentId}`)
+
 // Prescriptions
 export const fetchPrescriptions = (params) =>
   apiClient.get("/prescriptions", { params });

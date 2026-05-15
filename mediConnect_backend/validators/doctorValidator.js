@@ -14,6 +14,10 @@ const doctorValidator = [
     .optional()
     .isFloat({ min: 0 })
     .withMessage("Fee must be a positive number"),
+  body("currency")
+    .optional()
+    .isIn(["INR", "USD", "EUR", "GBP"])
+    .withMessage("Invalid currency code"),
   body("qualification").optional().trim(),
   body("gender")
     .optional()

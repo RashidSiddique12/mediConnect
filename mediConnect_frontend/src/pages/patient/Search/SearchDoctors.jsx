@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { formatCurrency } from '@/utils/currency'
 import {
   Box,
   Stack,
@@ -337,7 +338,7 @@ export default function SearchDoctors() {
                           Consultation Fee
                         </Text>
                         <Text fontSize="sm" fontWeight="700" color="teal.600">
-                          ${d.consultationFee || d.fee || 0}
+                          {formatCurrency(d.consultationFee || d.fee || 0, d.currency)}
                         </Text>
                       </Flex>
                     </Stack>

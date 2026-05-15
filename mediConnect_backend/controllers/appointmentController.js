@@ -2,6 +2,8 @@ const Appointment = require("../models/Appointment");
 const Hospital = require("../models/Hospital");
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const Payment = require("../models/Payment");
+const razorpay = require("../config/razorpay");
 const { success, created, paginated } = require("../utils/apiResponse");
 
 // GET /api/v1/appointments
@@ -207,6 +209,34 @@ const cancelAppointment = async (req, res, next) => {
       return res
         .status(403)
         .json({ success: false, message: "Access denied." });
+    }
+
+    // Auto-refund if payment was made
+    if (appointment.paymentStatus === 'paid') {
+      const payment = await Payment.findOne({
+        appointmentId: appointment._id,
+        status: 'paid',
+      })
+
+      if (payment && payment.razorpayPaymentId) {
+        try {
+          const refund = await razorpay.payments.refund(
+            payment.razorpayPaymentId,
+            {
+              amount: payment.amount * 100,
+              notes: { reason: 'Appointment cancelled by user' },
+            },
+          )
+          payment.status = 'refunded'
+          payment.refundId = refund.id
+          payment.refundedAt = new Date()
+          await payment.save()
+          appointment.paymentStatus = 'refunded'
+        } catch (refundError) {
+          console.error('Refund failed:', refundError)
+          // Still cancel the appointment, payment flagged for manual review
+        }
+      }
     }
 
     appointment.status = "cancelled";

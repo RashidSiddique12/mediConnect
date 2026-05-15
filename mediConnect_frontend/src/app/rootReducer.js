@@ -9,6 +9,7 @@ import * as appointmentSlice from "@/features/appointments/appointmentSlice";
 import * as prescriptionSlice from "@/features/prescriptions/prescriptionSlice";
 import * as reviewSlice from "@/features/reviews/reviewSlice";
 import * as scheduleSlice from "@/features/schedules/scheduleSlice";
+import * as paymentSlice from "@/features/payments/paymentSlice";
 
 const rootReducer = combineReducers({
   auth: authSlice.authReducer,
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   prescriptions: prescriptionSlice.prescriptionReducer,
   reviews: reviewSlice.reviewReducer,
   schedules: scheduleSlice.scheduleReducer,
+  payments: paymentSlice.paymentReducer,
 });
 
 export default rootReducer;
