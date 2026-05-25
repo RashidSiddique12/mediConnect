@@ -20,7 +20,8 @@ function* handleFetchDashboard() {
     }
     yield put(dashboardSlice.fetchDashboardSuccess(response.data.data));
   } catch (error) {
-    yield put(dashboardSlice.fetchDashboardFailure(error.message));
+    const message = error?.message || 'Failed to fetch dashboard'
+    yield put(dashboardSlice.fetchDashboardFailure(message));
   }
 }
 

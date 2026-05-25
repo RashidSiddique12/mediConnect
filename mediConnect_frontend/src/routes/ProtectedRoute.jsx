@@ -3,9 +3,9 @@ import { Navigate, Outlet } from "react-router-dom";
 
 export default function ProtectedRoute({ allowedRoles }) {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem('authToken');
 
-  if (!isAuthenticated && !token) {
+  if (!isAuthenticated || !token) {
     return <Navigate to="/login" replace />;
   }
 

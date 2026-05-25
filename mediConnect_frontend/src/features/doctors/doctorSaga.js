@@ -27,7 +27,8 @@ function* handleFetchDoctors(action) {
       }),
     );
   } catch (error) {
-    yield put(doctorSlice.fetchDoctorsFailure(error.message));
+    const message = error?.message || 'Failed to fetch doctors'
+    yield put(doctorSlice.fetchDoctorsFailure(message));
   }
 }
 
@@ -36,7 +37,8 @@ function* handleFetchDoctorById(action) {
     const response = yield call(fetchDoctorById, action.payload);
     yield put(doctorSlice.fetchDoctorByIdSuccess(response.data.data));
   } catch (error) {
-    yield put(doctorSlice.fetchDoctorByIdFailure(error.message));
+    const message = error?.message || 'Failed to fetch doctor'
+    yield put(doctorSlice.fetchDoctorByIdFailure(message));
   }
 }
 
@@ -45,7 +47,8 @@ function* handleCreateDoctor(action) {
     const response = yield call(addDoctor, action.payload);
     yield put(doctorSlice.createDoctorSuccess(response.data.data));
   } catch (error) {
-    yield put(doctorSlice.createDoctorFailure(error.message));
+    const message = error?.message || 'Failed to create doctor'
+    yield put(doctorSlice.createDoctorFailure(message));
   }
 }
 
@@ -55,7 +58,8 @@ function* handleUpdateDoctor(action) {
     const response = yield call(updateDoctor, id, data);
     yield put(doctorSlice.updateDoctorSuccess(response.data.data));
   } catch (error) {
-    yield put(doctorSlice.updateDoctorFailure(error.message));
+    const message = error?.message || 'Failed to update doctor'
+    yield put(doctorSlice.updateDoctorFailure(message));
   }
 }
 
@@ -64,7 +68,8 @@ function* handleDeleteDoctor(action) {
     yield call(deleteDoctor, action.payload);
     yield put(doctorSlice.deleteDoctorSuccess(action.payload));
   } catch (error) {
-    yield put(doctorSlice.deleteDoctorFailure(error.message));
+    const message = error?.message || 'Failed to delete doctor'
+    yield put(doctorSlice.deleteDoctorFailure(message));
   }
 }
 

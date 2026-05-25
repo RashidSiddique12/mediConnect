@@ -19,7 +19,8 @@ function* handleFetchHospitals(action) {
       }),
     );
   } catch (error) {
-    yield put(hospitalSlice.fetchHospitalsFailure(error.message));
+    const message = error?.message || 'Failed to fetch hospitals'
+    yield put(hospitalSlice.fetchHospitalsFailure(message));
   }
 }
 
@@ -28,7 +29,8 @@ function* handleAddHospital(action) {
     const response = yield call(addHospital, action.payload);
     yield put(hospitalSlice.addHospitalSuccess(response.data.data));
   } catch (error) {
-    yield put(hospitalSlice.addHospitalFailure(error.message));
+    const message = error?.message || 'Failed to add hospital'
+    yield put(hospitalSlice.addHospitalFailure(message));
   }
 }
 
@@ -37,7 +39,8 @@ function* handleToggleHospitalStatus(action) {
     const response = yield call(toggleHospitalStatus, action.payload);
     yield put(hospitalSlice.toggleHospitalStatusSuccess(response.data.data));
   } catch (error) {
-    yield put(hospitalSlice.toggleHospitalStatusFailure(error.message));
+    const message = error?.message || 'Failed to toggle hospital status'
+    yield put(hospitalSlice.toggleHospitalStatusFailure(message));
   }
 }
 
@@ -46,7 +49,8 @@ function* handleFetchHospitalById(action) {
     const response = yield call(fetchHospitalById, action.payload);
     yield put(hospitalSlice.fetchHospitalByIdSuccess(response.data.data));
   } catch (error) {
-    yield put(hospitalSlice.fetchHospitalByIdFailure(error.message));
+    const message = error?.message || 'Failed to fetch hospital'
+    yield put(hospitalSlice.fetchHospitalByIdFailure(message));
   }
 }
 
@@ -55,7 +59,8 @@ function* handleFetchMyHospital() {
     const response = yield call(fetchMyHospital);
     yield put(hospitalSlice.fetchMyHospitalSuccess(response.data.data));
   } catch (error) {
-    yield put(hospitalSlice.fetchMyHospitalFailure(error.message));
+    const message = error?.message || 'Failed to fetch hospital'
+    yield put(hospitalSlice.fetchMyHospitalFailure(message));
   }
 }
 
@@ -65,7 +70,8 @@ function* handleEditHospital(action) {
     const response = yield call(updateHospital, id, data);
     yield put(hospitalSlice.editHospitalSuccess(response.data.data));
   } catch (error) {
-    yield put(hospitalSlice.editHospitalFailure(error.message));
+    const message = error?.message || 'Failed to update hospital'
+    yield put(hospitalSlice.editHospitalFailure(message));
   }
 }
 

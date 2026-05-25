@@ -18,7 +18,8 @@ function* handleFetchAppointments(action) {
       }),
     );
   } catch (error) {
-    yield put(appointmentSlice.fetchAppointmentsFailure(error.message));
+    const message = error?.message || 'Failed to fetch appointments'
+    yield put(appointmentSlice.fetchAppointmentsFailure(message));
   }
 }
 
@@ -27,7 +28,8 @@ function* handleFetchAppointmentById(action) {
     const response = yield call(fetchAppointmentById, action.payload);
     yield put(appointmentSlice.fetchAppointmentByIdSuccess(response.data.data));
   } catch (error) {
-    yield put(appointmentSlice.fetchAppointmentByIdFailure(error.message));
+    const message = error?.message || 'Failed to fetch appointment'
+    yield put(appointmentSlice.fetchAppointmentByIdFailure(message));
   }
 }
 
@@ -36,7 +38,8 @@ function* handleBookAppointment(action) {
     yield call(bookAppointment, action.payload);
     yield put(appointmentSlice.bookAppointmentSuccess());
   } catch (error) {
-    yield put(appointmentSlice.bookAppointmentFailure(error.message));
+    const message = error?.message || 'Failed to book appointment'
+    yield put(appointmentSlice.bookAppointmentFailure(message));
   }
 }
 
@@ -45,7 +48,8 @@ function* handleCancelAppointment(action) {
     yield call(cancelAppointment, action.payload);
     yield put(appointmentSlice.cancelAppointmentSuccess(action.payload));
   } catch (error) {
-    yield put(appointmentSlice.cancelAppointmentFailure(error.message));
+    const message = error?.message || 'Failed to cancel appointment'
+    yield put(appointmentSlice.cancelAppointmentFailure(message));
   }
 }
 
@@ -55,7 +59,8 @@ function* handleUpdateAppointment(action) {
     const response = yield call(updateAppointment, id, data);
     yield put(appointmentSlice.updateAppointmentSuccess(response.data.data));
   } catch (error) {
-    yield put(appointmentSlice.updateAppointmentFailure(error.message));
+    const message = error?.message || 'Failed to update appointment'
+    yield put(appointmentSlice.updateAppointmentFailure(message));
   }
 }
 

@@ -13,7 +13,8 @@ function* handleFetchPrescriptions(action) {
       }),
     );
   } catch (error) {
-    yield put(prescriptionSlice.fetchPrescriptionsFailure(error.message));
+    const message = error?.message || 'Failed to fetch prescriptions'
+    yield put(prescriptionSlice.fetchPrescriptionsFailure(message));
   }
 }
 
@@ -34,7 +35,9 @@ function* handleFetchPrescriptionByAppointment(action) {
       yield put(prescriptionSlice.fetchPrescriptionByAppointmentSuccess(null));
     } else {
       yield put(
-        prescriptionSlice.fetchPrescriptionByAppointmentFailure(error.message),
+        prescriptionSlice.fetchPrescriptionByAppointmentFailure(
+          error?.message || 'Failed to fetch prescription',
+        ),
       );
     }
   }
@@ -45,7 +48,8 @@ function* handleUploadPrescription(action) {
     const response = yield call(uploadPrescription, action.payload);
     yield put(prescriptionSlice.uploadPrescriptionSuccess(response.data.data));
   } catch (error) {
-    yield put(prescriptionSlice.uploadPrescriptionFailure(error.message));
+    const message = error?.message || 'Failed to upload prescription'
+    yield put(prescriptionSlice.uploadPrescriptionFailure(message));
   }
 }
 

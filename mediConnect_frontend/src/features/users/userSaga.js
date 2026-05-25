@@ -16,7 +16,8 @@ function* handleFetchUsers(action) {
       }),
     );
   } catch (error) {
-    yield put(userSlice.fetchUsersFailure(error.message));
+    const message = error?.message || 'Failed to fetch users'
+    yield put(userSlice.fetchUsersFailure(message));
   }
 }
 
@@ -25,7 +26,8 @@ function* handleFetchUserById(action) {
     const response = yield call(fetchUserById, action.payload);
     yield put(userSlice.fetchUserByIdSuccess(response.data.data));
   } catch (error) {
-    yield put(userSlice.fetchUserByIdFailure(error.message));
+    const message = error?.message || 'Failed to fetch user'
+    yield put(userSlice.fetchUserByIdFailure(message));
   }
 }
 
@@ -34,7 +36,8 @@ function* handleToggleUserStatus(action) {
     const response = yield call(toggleUserStatus, action.payload);
     yield put(userSlice.toggleUserStatusSuccess(response.data.data));
   } catch (error) {
-    yield put(userSlice.toggleUserStatusFailure(error.message));
+    const message = error?.message || 'Failed to toggle user status'
+    yield put(userSlice.toggleUserStatusFailure(message));
   }
 }
 

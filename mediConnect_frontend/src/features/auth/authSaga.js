@@ -24,7 +24,8 @@ function* handleLogin(action) {
     const route = ROLE_ROUTES[user.role] || "/dashboard";
     window.location.href = route;
   } catch (error) {
-    yield put(authSlice.loginFailure(error.message));
+    const message = error?.message || 'Login failed'
+    yield put(authSlice.loginFailure(message));
   }
 }
 
@@ -34,7 +35,8 @@ function* handleRegister(action) {
     yield put(authSlice.registerSuccess());
     window.location.href = "/login";
   } catch (error) {
-    yield put(authSlice.registerFailure(error.message));
+    const message = error?.message || 'Registration failed'
+    yield put(authSlice.registerFailure(message));
   }
 }
 
@@ -46,7 +48,8 @@ function* handleUpdateProfile(action) {
     localStorage.setItem("user", JSON.stringify(user));
     yield put(authSlice.updateProfileSuccess(user));
   } catch (error) {
-    yield put(authSlice.updateProfileFailure(error.message));
+    const message = error?.message || 'Failed to update profile'
+    yield put(authSlice.updateProfileFailure(message));
   }
 }
 

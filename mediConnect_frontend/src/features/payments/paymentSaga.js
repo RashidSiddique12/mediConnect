@@ -16,7 +16,7 @@ function* handleCreateOrder(action) {
     yield put(createOrderSuccess(response.data.data))
   } catch (error) {
     const message =
-      error.response?.data?.message || 'Failed to create payment order'
+      error?.message || 'Failed to create payment order'
     yield put(createOrderFailure(message))
     toaster.create({
       title: 'Payment Error',
@@ -32,7 +32,7 @@ function* handleVerifyPayment(action) {
     yield put(verifyPaymentSuccess())
   } catch (error) {
     const message =
-      error.response?.data?.message || 'Payment verification failed'
+      error?.message || 'Payment verification failed'
     yield put(verifyPaymentFailure(message))
     toaster.create({
       title: 'Verification Failed',

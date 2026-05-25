@@ -12,7 +12,8 @@ function* handleFetchSpecialties(action) {
     const response = yield call(fetchSpecialties, action.payload);
     yield put(specialtySlice.fetchSpecialtiesSuccess(response.data.data || []));
   } catch (error) {
-    yield put(specialtySlice.fetchSpecialtiesFailure(error.message));
+    const message = error?.message || 'Failed to fetch specialties'
+    yield put(specialtySlice.fetchSpecialtiesFailure(message));
   }
 }
 
@@ -21,7 +22,8 @@ function* handleAddSpecialty(action) {
     const response = yield call(addSpecialty, action.payload);
     yield put(specialtySlice.addSpecialtySuccess(response.data.data));
   } catch (error) {
-    yield put(specialtySlice.addSpecialtyFailure(error.message));
+    const message = error?.message || 'Failed to add specialty'
+    yield put(specialtySlice.addSpecialtyFailure(message));
   }
 }
 
@@ -31,7 +33,8 @@ function* handleUpdateSpecialty(action) {
     const response = yield call(updateSpecialty, id, data);
     yield put(specialtySlice.updateSpecialtySuccess(response.data.data));
   } catch (error) {
-    yield put(specialtySlice.updateSpecialtyFailure(error.message));
+    const message = error?.message || 'Failed to update specialty'
+    yield put(specialtySlice.updateSpecialtyFailure(message));
   }
 }
 
@@ -40,7 +43,8 @@ function* handleDeleteSpecialty(action) {
     yield call(deleteSpecialty, action.payload);
     yield put(specialtySlice.deleteSpecialtySuccess(action.payload));
   } catch (error) {
-    yield put(specialtySlice.deleteSpecialtyFailure(error.message));
+    const message = error?.message || 'Failed to delete specialty'
+    yield put(specialtySlice.deleteSpecialtyFailure(message));
   }
 }
 

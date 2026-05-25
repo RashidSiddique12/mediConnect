@@ -46,6 +46,7 @@ import {
 } from "@/features/payments/paymentSelectors";
 import { selectUser } from "@/features/auth/authSelectors";
 import { loadRazorpayScript } from "@/utils/loadRazorpay";
+import { toaster } from "@/components/ui/toaster";
 
 function toDateKey(d) {
   if (typeof d === "string") return d.split("T")[0];
@@ -142,7 +143,11 @@ export default function BookAppointment() {
     const openRazorpay = async () => {
       const loaded = await loadRazorpayScript();
       if (!loaded) {
-        alert("Razorpay SDK failed to load. Check your connection.");
+        toaster.create({
+          title: 'Payment Error',
+          description: 'Razorpay SDK failed to load. Check your connection.',
+          type: 'error',
+        });
         return;
       }
 
@@ -171,9 +176,23 @@ export default function BookAppointment() {
         theme: {
           color: "#0D9488",
         },
+        modal: {
+          ondismiss: () => {
+            dispatch(resetPayment());
+          },
+        },
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response) => {
+        toaster.create({
+          title: 'Payment Failed',
+          description:
+            response.error?.description || 'Payment could not be processed.',
+          type: 'error',
+        });
+        dispatch(resetPayment());
+      });
       rzp.open();
     };
 

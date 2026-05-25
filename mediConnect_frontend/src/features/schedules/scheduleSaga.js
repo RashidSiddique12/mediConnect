@@ -19,7 +19,8 @@ function* handleFetchSchedules(action) {
     }
     yield put(scheduleSlice.fetchSchedulesSuccess(response.data.data || []));
   } catch (error) {
-    yield put(scheduleSlice.fetchSchedulesFailure(error.message));
+    const message = error?.message || 'Failed to fetch schedules'
+    yield put(scheduleSlice.fetchSchedulesFailure(message));
   }
 }
 
@@ -28,7 +29,8 @@ function* handleCreateSchedule(action) {
     const response = yield call(createSchedule, action.payload);
     yield put(scheduleSlice.createScheduleSuccess(response.data.data));
   } catch (error) {
-    yield put(scheduleSlice.createScheduleFailure(error.message));
+    const message = error?.message || 'Failed to create schedule'
+    yield put(scheduleSlice.createScheduleFailure(message));
   }
 }
 
@@ -39,7 +41,8 @@ function* handleCreateBulkSchedules(action) {
       scheduleSlice.createBulkSchedulesSuccess(response.data.data.schedules),
     );
   } catch (error) {
-    yield put(scheduleSlice.createBulkSchedulesFailure(error.message));
+    const message = error?.message || 'Failed to create bulk schedules'
+    yield put(scheduleSlice.createBulkSchedulesFailure(message));
   }
 }
 
@@ -48,7 +51,8 @@ function* handleDeleteSchedule(action) {
     yield call(deleteSchedule, action.payload);
     yield put(scheduleSlice.deleteScheduleSuccess(action.payload));
   } catch (error) {
-    yield put(scheduleSlice.deleteScheduleFailure(error.message));
+    const message = error?.message || 'Failed to delete schedule'
+    yield put(scheduleSlice.deleteScheduleFailure(message));
   }
 }
 

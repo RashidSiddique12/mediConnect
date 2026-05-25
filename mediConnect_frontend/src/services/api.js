@@ -21,15 +21,21 @@ apiClient.interceptors.request.use(
 );
 
 // ─── Response Interceptor ────────────────────────────────────────────────────
+let isRedirectingToLogin = false
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
 
-    if (status === 401) {
-      // Token expired or invalid — clear session to prevent broken access control.
-      localStorage.removeItem("authToken");
-      window.location.href = "/login";
+    if (status === 401 && !isRedirectingToLogin) {
+      isRedirectingToLogin = true
+      // Token expired or invalid — clear ALL session data to prevent redirect loop.
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('userRole')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
     }
 
     const message =

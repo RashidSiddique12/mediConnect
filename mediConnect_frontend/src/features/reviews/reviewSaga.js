@@ -17,7 +17,8 @@ function* handleFetchReviews(action) {
       }),
     );
   } catch (error) {
-    yield put(reviewSlice.fetchReviewsFailure(error.message));
+    const message = error?.message || 'Failed to fetch reviews'
+    yield put(reviewSlice.fetchReviewsFailure(message));
   }
 }
 
@@ -26,7 +27,8 @@ function* handleSubmitReview(action) {
     yield call(submitReview, action.payload);
     yield put(reviewSlice.submitReviewSuccess());
   } catch (error) {
-    yield put(reviewSlice.submitReviewFailure(error.message));
+    const message = error?.message || 'Failed to submit review'
+    yield put(reviewSlice.submitReviewFailure(message));
   }
 }
 
@@ -40,7 +42,8 @@ function* handleModerateReview(action) {
     }
     yield put(reviewSlice.moderateReviewSuccess({ id, status }));
   } catch (error) {
-    yield put(reviewSlice.moderateReviewFailure(error.message));
+    const message = error?.message || 'Failed to moderate review'
+    yield put(reviewSlice.moderateReviewFailure(message));
   }
 }
 
